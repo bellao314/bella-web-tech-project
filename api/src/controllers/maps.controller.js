@@ -39,14 +39,3 @@ export async function placeSearch(req, res, next) {
     res.json(await mapsService.searchPlaces(requireString(textQuery, "textQuery"), options));
   } catch (error) { next(error); }
 }
-
-export async function route(req, res, next) {
-  try {
-    if (!req.body.origin || !req.body.destination) {
-      const error = new Error("origin and destination are required.");
-      error.statusCode = 400;
-      throw error;
-    }
-    res.json(await mapsService.computeRoute(req.body));
-  } catch (error) { next(error); }
-}

@@ -1,7 +1,6 @@
 const GOOGLE_MAPS_BASE_URLS = {
   geocoding: "https://maps.googleapis.com/maps/api/geocode/json",
   places: "https://places.googleapis.com/v1",
-  routes: "https://routes.googleapis.com/directions/v2:computeRoutes",
 };
 
 export function getGoogleMapsApiKey() {

@@ -42,15 +42,3 @@ export function searchPlaces(textQuery, options = {}) {
     body: JSON.stringify({ textQuery, ...options }),
   });
 }
-
-export function computeRoute(routeRequest) {
-  return googleRequest(GOOGLE_MAPS_BASE_URLS.routes, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Goog-Api-Key": getGoogleMapsApiKey(),
-      "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs",
-    },
-    body: JSON.stringify({ travelMode: "DRIVE", ...routeRequest }),
-  });
-}
