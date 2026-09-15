@@ -11,7 +11,10 @@
   },
   "dependencies": {
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "@googlemaps/markerclusterer": "^2.5.1",
+    "@vis.gl/react-google-maps": "latest",
+    "vite": "^5.0.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
