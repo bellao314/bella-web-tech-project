@@ -1,16 +1,22 @@
 {
   "devDependencies": {
-    "prisma": "^8.0.0-rc.15"
+    "@prisma/cli-engine": "^0.7.0",
+    "@types/node": "^26.6.5",
+    "prisma": "^8.0.0-rc.22",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
+    "@prisma/orm-postgres": "^8.0.0-rc.17",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "pg": "^8.23.0"
   },
   "type": "module",
   "scripts": {
-    "postinstall": "prisma skills sync || exit 0"
+    "postinstall": "prisma skills sync || exit 0",
+    "contract:emit": "prisma contract emit"
   }
 }
