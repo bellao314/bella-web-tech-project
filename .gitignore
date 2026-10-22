@@ -25,3 +25,8 @@ dist-ssr
 *.sw?
 node_modules/
 dist/
+
+.agents
+.claude
+.cursor
+.devin

@@ -7,11 +7,36 @@ model User {
   name      String?
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
+  logs      logs[]
 }
 
 model Vendor {
   id        Int      @id @default(autoincrement())
   name      String
   type      String
-  location  
+  location  Location?
+}
+
+model logs {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      LogType
+  message   String?
+  createdAt DateTime   @default(now())
+
+}
+
+model Location {
+  id        Int             @id @default(autoincrement())
+  vendorId  Int             @unique
+  vendor    Vendor          @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  latitude  Decimal
+  longitude Decimal
+}
+
+enum LogType {
+  USER_LOGIN_FAILURE
+  USER_LOGIN_LOCAL
+  USER_PASSWORD_CHANGE
 }
