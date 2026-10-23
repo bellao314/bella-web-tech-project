@@ -44,21 +44,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
 .prototype-notes li a.active { color: var(--forest); font-weight: 700; padding-left: 12px; }
 .prototype-notes small { color: var(--muted); line-height: 1.5; }
 
-.phone-frame {
-  width: 390px;
-  height: 812px;
-  flex: 0 0 auto;
-  position: relative;
-  overflow: hidden;
-  border: 9px solid #18201b;
-  border-radius: 46px;
-  background: var(--paper);
-  box-shadow: 0 32px 80px rgba(35, 48, 39, .24), 0 0 0 1px rgba(255,255,255,.25) inset;
-}
-.status-bar { height: 33px; position: absolute; z-index: 30; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 8px 23px 0; font-size: 11px; font-weight: 700; pointer-events: none; }
-.status-bar div { display: flex; align-items: center; gap: 7px; font-size: 8px; letter-spacing: 1px; }
-.phone-content { position: absolute; inset: 0; overflow: hidden; }
-.home-indicator { position: absolute; z-index: 40; bottom: 6px; left: 50%; width: 116px; height: 4px; transform: translateX(-50%); border-radius: 9px; background: var(--ink); }
+.content { position: absolute; inset: 0; overflow: hidden; }
 
 .page, .login-screen { height: 100%; padding-top: 33px; background: var(--paper); }
 .scroll-page { overflow-y: auto; padding-bottom: 100px; scrollbar-width: none; }

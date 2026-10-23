@@ -26,7 +26,7 @@ import {
 
 import {MarkerClusterer} from '@googlemaps/markerclusterer';
 
-import {Circle} from './components/circle';
+import {Circle} from './circle';
 
 const locations = [
   {key: 'operaHouse', location: { lat: -33.8567844, lng: 151.213108  }},
