@@ -17,7 +17,7 @@ import VendorInfoPage from "./pages/VendorInfoPage";
 
 function AppLayout() {
   const { pathname } = useLocation()
-  const showNav = ["/map", "/recommended", "/profile", "/vendor"].includes(pathname)
+  const showNav = ["/map", "/recommended", "/profile"].includes(pathname) || pathname.startsWith("/vendor/")
 
   return (
     <div className="prototype-shell">
@@ -36,7 +36,7 @@ export default function App() {
         <Route path="recommended" element={<RecommendedPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="pin" element={<PinPage />} />
-        <Route path="vendor" element={<VendorInfoPage />} />
+        <Route path="vendor/:vendorId" element={<VendorInfoPage />} />
       </Route>
     </Routes>
   )

@@ -78,6 +78,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
 .overlay-header { position: absolute; z-index: 5; top: 33px; left: 0; right: 0; }
 .map-search, .pin-search { position: absolute; z-index: 5; top: 118px; left: 18px; right: 18px; }
 .map-artwork { position: absolute; inset: 0; background-color: #e8eae4; background-image: linear-gradient(28deg, transparent 48%, rgba(255,255,255,.8) 49%, rgba(255,255,255,.8) 53%, transparent 54%), linear-gradient(102deg, transparent 58%, rgba(255,255,255,.8) 59%, rgba(255,255,255,.8) 63%, transparent 64%); overflow: hidden; }
+.empty-state, .map-empty-state { margin: 18px 22px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.map-empty-state { position: absolute; top: 46%; left: 50%; width: min(260px, 80vw); transform: translate(-50%, -50%); padding: 12px; border-radius: 10px; background: rgba(255,255,255,.85); text-align: center; }
 .map-artwork::before, .map-artwork::after { content: ''; position: absolute; border: 1px solid #d3d8d1; background: #e1e5de; }
 .map-artwork::before { width: 115px; height: 78px; left: 28px; top: 188px; transform: rotate(-8deg); }
 .map-artwork::after { width: 136px; height: 94px; right: 25px; top: 200px; transform: rotate(8deg); }

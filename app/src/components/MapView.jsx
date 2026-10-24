@@ -28,10 +28,6 @@ import {MarkerClusterer} from '@googlemaps/markerclusterer';
 
 import {Circle} from './circle';
 
-const locations = [
-  {key: 'operaHouse', location: { lat: -33.8567844, lng: 151.213108  }},
-];
-
 const PoiMarkers = ({ pois }) => {
   const map = useMap();
   const [markers, setMarkers] = useState({});
@@ -100,12 +96,21 @@ const PoiMarkers = ({ pois }) => {
   );
 };
 
-function MapView() {
+function MapView({ vendors = [] }) {
+  const locations = vendors
+    .filter((vendor) => Number.isFinite(vendor.latitude) && Number.isFinite(vendor.longitude))
+    .map((vendor, index) => ({ key: String(vendor.id || index), location: { lat: vendor.latitude, lng: vendor.longitude } }));
+  const center = locations[0]?.location;
+
+  if (!import.meta.env.VITE_GOOGLE_API_KEY) {
+    return <div className="map-artwork"><p className="map-empty-state">Map coordinates will appear when supplied by the API.</p></div>;
+  }
+
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_API_KEY} onLoad={() => console.log('Maps API has loaded.')}>
       <Map
-        defaultZoom={15}
-        defaultCenter={{ lat: 38.635745, lng: -90.234145 }}
+        defaultZoom={center ? 13 : 2}
+        defaultCenter={center || { lat: 0, lng: 0 }}
         style={{width: '100%', height: '100vh'}}
         onCameraChanged={ (ev) =>
           console.log('camera changed:', ev.detail.center, 'zoom:', ev.detail.zoom)
