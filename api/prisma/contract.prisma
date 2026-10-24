@@ -15,6 +15,9 @@ model Vendor {
   name      String
   type      String
   city      String
+  email     String?
+  phone     String?
+  website   String?
   location  Location?
 }
 

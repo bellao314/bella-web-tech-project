@@ -1,14 +1,13 @@
 import { db } from './db.js';
 
 async function seed() {
-  const user = await db.orm.public.User.upsert({
-    create: {
-      email: 'seed.user@example.com',
-      name: 'Seed User',
-    },
-    update: {
-      name: 'Seed User',
-    },
+  const existingUser = await db.orm.public.User
+    .where({ email: 'seed.user@example.com' })
+    .first();
+
+  const user = existingUser ?? await db.orm.public.User.create({
+    email: 'seed.user@example.com',
+    name: 'Seed User',
   });
 
   const existingVendor = await db.orm.public.Vendor

@@ -201,6 +201,20 @@
           },
           "Vendor": {
             "fields": {
+              "city": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "email": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "id": {
                 "nullable": false,
                 "type": {
@@ -215,8 +229,22 @@
                   "kind": "scalar"
                 }
               },
+              "phone": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "type": {
                 "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "website": {
+                "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
@@ -243,14 +271,26 @@
             },
             "storage": {
               "fields": {
+                "city": {
+                  "column": "city"
+                },
+                "email": {
+                  "column": "email"
+                },
                 "id": {
                   "column": "id"
                 },
                 "name": {
                   "column": "name"
                 },
+                "phone": {
+                  "column": "phone"
+                },
                 "type": {
                   "column": "type"
+                },
+                "website": {
+                  "column": "website"
                 }
               },
               "namespaceId": "public",
@@ -473,6 +513,16 @@
             },
             "Vendor": {
               "columns": {
+                "city": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "email": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
                 "id": {
                   "codecId": "pg/int4@1",
                   "dataType": "pg/int4",
@@ -487,10 +537,20 @@
                   "dataType": "pg/text",
                   "nullable": false
                 },
+                "phone": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
                 "type": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
                   "nullable": false
+                },
+                "website": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
                 }
               },
               "foreignKeys": [],
@@ -606,7 +666,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "7e50b827972f4ddaf5ba6c0bdc5fe9b9a5be574bfd4c74d38a0f665829326ee5"
+    "storageHash": "ddb9070a19ab051c73dc7a4c1e1516d9d126f73e38ed3aca552124355d24d5d4"
   },
   "execution": {
     "executionHash": "76ee8948067fff39e1b787eafdf2c9319ebe5e0f5029f71536b4f58b92d7790e",

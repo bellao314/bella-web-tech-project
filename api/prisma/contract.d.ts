@@ -18,7 +18,7 @@ import type {
 } from '@internal/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'7e50b827972f4ddaf5ba6c0bdc5fe9b9a5be574bfd4c74d38a0f665829326ee5'>;
+  StorageHashBase<'ddb9070a19ab051c73dc7a4c1e1516d9d126f73e38ed3aca552124355d24d5d4'>;
 export type ExecutionHash =
   ExecutionHashBase<'76ee8948067fff39e1b787eafdf2c9319ebe5e0f5029f71536b4f58b92d7790e'>;
 export type ProfileHash =
@@ -256,9 +256,13 @@ export type FieldOutputTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
     readonly Vendor: {
+      readonly city: CodecTypes['pg/text@1']['output'];
+      readonly email: CodecTypes['pg/text@1']['output'] | null;
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly name: CodecTypes['pg/text@1']['output'];
+      readonly phone: CodecTypes['pg/text@1']['output'] | null;
       readonly type: CodecTypes['pg/text@1']['output'];
+      readonly website: CodecTypes['pg/text@1']['output'] | null;
     };
   };
 };
@@ -286,9 +290,13 @@ export type FieldInputTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
     readonly Vendor: {
+      readonly city: CodecTypes['pg/text@1']['input'];
+      readonly email: CodecTypes['pg/text@1']['input'] | null;
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly name: CodecTypes['pg/text@1']['input'];
+      readonly phone: CodecTypes['pg/text@1']['input'] | null;
       readonly type: CodecTypes['pg/text@1']['input'];
+      readonly website: CodecTypes['pg/text@1']['input'] | null;
     };
   };
 };
@@ -316,9 +324,13 @@ export type StorageColumnTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
     readonly Vendor: {
+      readonly city: CodecTypes['pg/text@1']['output'];
+      readonly email: CodecTypes['pg/text@1']['output'] | null;
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly name: CodecTypes['pg/text@1']['output'];
+      readonly phone: CodecTypes['pg/text@1']['output'] | null;
       readonly type: CodecTypes['pg/text@1']['output'];
+      readonly website: CodecTypes['pg/text@1']['output'] | null;
     };
   };
 };
@@ -346,9 +358,13 @@ export type StorageColumnInputTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
     readonly Vendor: {
+      readonly city: CodecTypes['pg/text@1']['input'];
+      readonly email: CodecTypes['pg/text@1']['input'] | null;
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly name: CodecTypes['pg/text@1']['input'];
+      readonly phone: CodecTypes['pg/text@1']['input'] | null;
       readonly type: CodecTypes['pg/text@1']['input'];
+      readonly website: CodecTypes['pg/text@1']['input'] | null;
     };
   };
 };
@@ -373,9 +389,13 @@ export namespace Models {
     readonly [RelationKeys]?: 'logs';
   };
   export type public_Vendor = {
+    city: CodecTypes['pg/text@1']['output'];
+    email: CodecTypes['pg/text@1']['output'] | null;
     id: CodecTypes['pg/int4@1']['output'];
     name: CodecTypes['pg/text@1']['output'];
+    phone: CodecTypes['pg/text@1']['output'] | null;
     type: CodecTypes['pg/text@1']['output'];
+    website: CodecTypes['pg/text@1']['output'] | null;
     location: public_Location | null;
     readonly [RelationKeys]?: 'location';
   };
@@ -580,6 +600,18 @@ type ContractBase = Omit<
             };
             readonly Vendor: {
               columns: {
+                readonly city: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly email: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
                 readonly id: {
                   readonly dataType: 'pg/int4';
                   readonly codecId: 'pg/int4@1';
@@ -596,10 +628,22 @@ type ContractBase = Omit<
                   readonly nullable: false;
                   readonly many: false;
                 };
+                readonly phone: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
                 readonly type: {
                   readonly dataType: 'pg/text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly website: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
                   readonly many: false;
                 };
               };
@@ -789,6 +833,14 @@ type ContractBase = Omit<
           };
           readonly Vendor: {
             readonly fields: {
+              readonly city: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly email: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly id: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
@@ -797,8 +849,16 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly phone: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly type: {
                 readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly website: {
+                readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
             };
@@ -820,9 +880,13 @@ type ContractBase = Omit<
               readonly table: 'Vendor';
               readonly namespaceId: 'public';
               readonly fields: {
+                readonly city: { readonly column: 'city' };
+                readonly email: { readonly column: 'email' };
                 readonly id: { readonly column: 'id' };
                 readonly name: { readonly column: 'name' };
+                readonly phone: { readonly column: 'phone' };
                 readonly type: { readonly column: 'type' };
+                readonly website: { readonly column: 'website' };
               };
             };
           };
