@@ -1,9 +1,4 @@
-import 'dotenv/config';
-import dotenv from 'dotenv';
-dotenv.config({ path: './api/.env' });
-import pg from 'pg';
-
-const vendors = [
+export const vendors = [
   {
     name: "Dippidy Donuts",
     city: "Edwardsville, IL",
@@ -405,56 +400,3 @@ const vendors = [
     website: "[link removed]"
   }
 ];
-
-async function exportVendors() {
-  const connectionString = process.env.DATABASE_URL || 'postgresql://bellaott@localhost:5432/mobile-vendor';
-  const client = new pg.Client({ connectionString });
-  await client.connect();
-
-  console.log(`Connected to database. Exporting ${vendors.length} vendors...`);
-
-  // Ensure columns exist
-  await client.query(`
-    ALTER TABLE "Vendor" ADD COLUMN IF NOT EXISTS "city" text;
-    ALTER TABLE "Vendor" ADD COLUMN IF NOT EXISTS "email" text;
-    ALTER TABLE "Vendor" ADD COLUMN IF NOT EXISTS "phone" text;
-    ALTER TABLE "Vendor" ADD COLUMN IF NOT EXISTS "website" text;
-  `);
-
-  let inserted = 0;
-  let updated = 0;
-
-  for (const v of vendors) {
-    const existing = await client.query(
-      `SELECT id FROM "Vendor" WHERE name = $1`,
-      [v.name]
-    );
-
-    if (existing.rows.length === 0) {
-      await client.query(
-        `INSERT INTO "Vendor" (name, city, type, email, phone, website) VALUES ($1, $2, $3, $4, $5, $6)`,
-        [v.name, v.city, v.type, v.email, v.phone, v.website]
-      );
-      inserted++;
-    } else {
-      await client.query(
-        `UPDATE "Vendor" SET city = $2, type = $3, email = $4, phone = $5, website = $6 WHERE name = $1`,
-        [v.name, v.city, v.type, v.email, v.phone, v.website]
-      );
-      updated++;
-    }
-  }
-
-  console.log(`Export completed: ${inserted} inserted, ${updated} updated.`);
-
-  const res = await client.query(`SELECT count(*) FROM "Vendor"`);
-  console.log(`Total vendors in database: ${res.rows[0].count}`);
-
-  await client.end();
-}
-
-exportVendors().catch((err) => {
-  console.error("Export failed:", err);
-  process.exit(1);
-});
-

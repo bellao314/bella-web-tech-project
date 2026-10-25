@@ -1,25 +1,35 @@
+import { timeStamp } from 'console';
 import { db } from './db.js';
+// @ts-ignore: export-vendors.js has no TypeScript declaration.
+import { vendors } from './export-vendors.js';
 
 async function seed() {
-  const existingUser = await db.orm.public.User
-    .where({ email: 'seed.user@example.com' })
-    .first();
+  for (let i = 0; i < vendors.length; i++) {
+    const existingUser = await db.orm.public.User
+      .where({ email: vendors[i].email })
+      .first();
 
-  const user = existingUser ?? await db.orm.public.User.create({
-    email: 'seed.user@example.com',
-    name: 'Seed User',
-  });
+    const user = existingUser ?? await db.orm.public.User.create({
+      email: vendors[i].email,
+      name: vendors[i].name,
+      updatedAt: new Date(),
+    });
 
-  const existingVendor = await db.orm.public.Vendor
-    .where({ name: 'Seed Vendor', type: 'Food Truck' })
-    .first();
+    const existingVendor = await db.orm.public.Vendor
+      .where({ name: vendors[i].name, type: vendors[i].type })
+      .first();
 
-  const vendor = existingVendor ?? await db.orm.public.Vendor.create({
-    name: 'Seed Vendor',
-    type: 'Food Truck',
-  });
+    const vendor = existingVendor ?? await db.orm.public.Vendor.create({
+      name: vendors[i].name,
+      type: vendors[i].type,
+      city: vendors[i].city,
+      email: vendors[i].email ?? null,
+      phone: vendors[i].phone ?? null,
+      website: vendors[i].website ?? null
+    });
 
-  console.log(`Seeded user ${user.email} and vendor ${vendor.name}.`);
+    console.log(`Seeded user ${user.email} and vendor ${vendor.name}.`);
+  }
 }
 
 seed()
