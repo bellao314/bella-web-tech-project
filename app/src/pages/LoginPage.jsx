@@ -97,7 +97,7 @@ export default function LoginPage() {
 
         {isSignUp && (
           <label>
-            <span>Full name</span>
+            <span>Full name or Business Name</span>
             <div className="input-shell">
               <Icon name="user" size={18} />
               <input
