@@ -4,16 +4,16 @@
 :root {
   font-family: 'Inter', sans-serif;
   --bs-body-font-family: 'Inter', sans-serif;
-  color: #1f2521;
-  background: #e8ebe5;
+  color: #1d2420;
+  background: #eae8ee;
   font-synthesis: none;
   --ink: #1f2521;
-  --muted: #6b746d;
+  --muted: #847f8b;
   --paper: #f8f8f4;
   --line: #dfe2dc;
-  --forest: #214f3d;
-  --lime: #d9ec70;
-  --sage: #d8e2d3;
+  --forest: #422e65;
+  --lime: #9c88c0;
+  --sage: #e7e1f2;
 }
 
 * { box-sizing: border-box; }
