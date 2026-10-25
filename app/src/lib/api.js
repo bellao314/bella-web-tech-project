@@ -49,4 +49,23 @@ export async function getApi(path, signal) {
   return response.json()
 }
 
+export async function postApi(path, body, signal) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(body),
+    signal,
+  })
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error || `Request failed (${response.status})`)
+  }
+
+  return data
+}
+
 export { asArray }

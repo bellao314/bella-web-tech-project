@@ -1,99 +1,153 @@
-import samlConfig from "../../config/saml-config.js";
+import { Router } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { prisma } from "#prisma";
-import { LogType } from "#prisma-client";
+import { db } from "../prisma/db.ts";
 
-export const get = [
-  (req, res) => {
-    res.json({
-      url: samlConfig.login,
+const router = Router();
+
+// Handle login for either POST /api/auth/login or POST /api/auth
+async function handleLogin(req, res, next) {
+  const { email, password } = req.body || {};
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required." });
+  }
+
+  try {
+    const user = await db.orm.public.User.where({ email }).first();
+
+    if (!user || !user.password) {
+      await db.orm.public.logs.create({
+        type: "USER_LOGIN_FAILURE",
+        message: `Failed login attempt for ${email}`,
+      });
+      return res.status(401).json({ error: "Invalid credentials." });
+    }
+
+    const isMatched = await bcrypt.compare(password, user.password);
+    if (!isMatched) {
+      await db.orm.public.logs.create({
+        type: "USER_LOGIN_FAILURE",
+        userId: user.id,
+      });
+      return res.status(401).json({ error: "Invalid credentials." });
+    }
+
+    await db.orm.public.logs.create({
+      type: "USER_LOGIN_LOCAL",
+      userId: user.id,
     });
-  },
-];
 
-export const post = [
-  async (req, res) => {
-    const { email, password } = req.body;
-    try {
-      const user = await prisma.user.findUnique({ where: { email } });
+    const jwtSecret = process.env.JWT_SECRET || "default_jwt_secret_dev_mode";
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+      jwtSecret,
+      { expiresIn: "3h" }
+    );
 
-      if (!user || !user.password) {
-        //if there is no user matching the email or there is null or nothing this means that they are most likely an SSO user
-        await prisma.logs.create({
-          data: {
-            type: LogType.USER_LOGIN_FAILURE,
-            message: `Failed to login ${email}`,
-          },
-        });
+    return res.status(200).json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 
-        return res
-          .status(401)
-          .json({ error: "Invalid credentials or SSO required" });
-      }
-      const isMatched = await bcrypt.compare(password, user.password);
-      if (!isMatched) {
-        await prisma.logs.create({
-          data: { type: LogType.USER_LOGIN_FAILURE, userId: user.id },
-        });
-        return res
-          .status(401)
-          .json({ error: "Invalid credentials or SSO required" });
-      }
+router.post("/login", handleLogin);
+router.post("/", handleLogin);
 
-      await prisma.logs.create({
-        data: { type: LogType.USER_LOGIN_LOCAL, userId: user.id },
-      });
+// POST /api/auth/register - Register a new user
+router.post("/register", async (req, res, next) => {
+  const { email, password, name } = req.body || {};
 
-      const token = jwt.sign(
-        //signed with information
-        {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: "3h" },
-      );
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required." });
+  }
 
-      return res.status(200).json({ token });
-    } catch (error) {
-      console.log("Error", error);
-
-      return res.status(500).json({ error: "Internal server error" });
+  try {
+    const existing = await db.orm.public.User.where({ email }).first();
+    if (existing) {
+      return res.status(409).json({ error: "A user with this email already exists." });
     }
-  },
-];
 
-export const put = [
-  async (req, res) => {
-    const { userId, password } = req.body;
-    try {
-      const user = await prisma.user.findUnique({ where: { id: userId } });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await db.orm.public.User.create({
+      email,
+      password: hashedPassword,
+      name: name || null,
+      updatedAt: new Date(),
+    });
 
-      if (!user || !user.password) {
-        //if there is no user matching the userId
+    await db.orm.public.logs.create({
+      type: "USER_LOGIN_LOCAL",
+      userId: user.id,
+    });
 
-        return res
-          .status(401)
-          .json({ error: "Invalid credentials or SSO required" });
-      }
-      const hashedPassword = await bcrypt.hash(password, 10);
+    const jwtSecret = process.env.JWT_SECRET || "default_jwt_secret_dev_mode";
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+      jwtSecret,
+      { expiresIn: "3h" }
+    );
 
-      await prisma.user.update({
-        where: { id: userId },
-        data: { password: hashedPassword },
-      });
-      await prisma.logs.create({
-        data: { type: LogType.USER_PASSWORD_CHANGE, userId: user.id },
-      });
-      return res.status(200).json({ success: true });
-    } catch (error) {
-      console.log("Error", error);
-      return res
-        .status(401)
-        .json({ error: "Invalid credentials or SSO required" });
+    return res.status(201).json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /api/auth/password (or PUT /api/auth) - Update password
+async function handlePasswordUpdate(req, res, next) {
+  const { userId, password } = req.body || {};
+
+  if (!userId || !password) {
+    return res.status(400).json({ error: "userId and password are required." });
+  }
+
+  try {
+    const user = await db.orm.public.User.where({ id: Number(userId) }).first();
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
     }
-  },
-];
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await db.orm.public.User.where({ id: Number(userId) }).update({
+      password: hashedPassword,
+      updatedAt: new Date(),
+    });
+
+    await db.orm.public.logs.create({
+      type: "USER_PASSWORD_CHANGE",
+      userId: user.id,
+    });
+
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+}
+
+router.put("/password", handlePasswordUpdate);
+router.put("/", handlePasswordUpdate);
+
+export default router;
