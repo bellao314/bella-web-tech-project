@@ -66,18 +66,20 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="login-screen">
-      <div className="brand-mark"><Icon name="pin" size={27} /></div>
-      <div className="login-copy">
-        <p className="eyebrow">{isSignUp ? "START EXPLORING" : "LOCAL, MADE EASY"}</p>
-        <p>
-          {isSignUp
-            ? "Create an account to discover independent vendors, save your favorites, and drop pins."
-            : "Discover independent vendors, save the ones you love, and always know where to find them."}
-        </p>
+    <main className="login-screen d-flex flex-column align-items-center">
+      <div className="d-flex flex-column align-items-start col-12 col-lg-6">
+        <div className="brand-mark"><Icon name="pin" size={27} /></div>
+        <div className="mt-5">
+          <p className="eyebrow fs-5">{isSignUp ? "START EXPLORING" : "FIND YOUR FAVES"}</p>
+          <p className="fs-6">
+            {isSignUp
+              ? "Create an account to discover independent vendors, save your favorites, and drop pins."
+              : "Discover independent vendors, save the ones you love, and always know where to find them."}
+          </p>
+        </div>
       </div>
 
-      <form className="login-form" onSubmit={handleSubmit}>
+      <form className="login-form col-12 col-lg-6" onSubmit={handleSubmit}>
         {error && (
           <div
             style={{
