@@ -39,14 +39,87 @@ export function vendorFrom(record) {
   }
 }
 
+function isValidJwt(token) {
+  if (!token || typeof token !== "string" || token === "undefined" || token === "null") {
+    return false
+  }
+  try {
+    const parts = token.split(".")
+    if (parts.length !== 3) return false
+    const payload = JSON.parse(atob(parts[1]))
+    // If exp is present, check whether it has passed
+    if (payload.exp && Date.now() >= payload.exp * 1000) {
+      return false
+    }
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function getAuthToken() {
+  const sessionToken = sessionStorage.getItem("authToken")
+  const localToken = localStorage.getItem("authToken")
+
+  // Check sessionStorage first (typically the most recent session sign-in)
+  if (isValidJwt(sessionToken)) {
+    return sessionToken
+  }
+  if (sessionToken) {
+    sessionStorage.removeItem("authToken")
+  }
+
+  // Check localStorage (persistent sign-in)
+  if (isValidJwt(localToken)) {
+    return localToken
+  }
+  if (localToken) {
+    localStorage.removeItem("authToken")
+  }
+
+  return null
+}
+
+export function setAuthToken(token, rememberMe = false) {
+  if (!token) {
+    clearAuthToken()
+    return
+  }
+  if (rememberMe) {
+    sessionStorage.removeItem("authToken")
+    localStorage.setItem("authToken", token)
+  } else {
+    localStorage.removeItem("authToken")
+    sessionStorage.setItem("authToken", token)
+  }
+}
+
+export function clearAuthToken() {
+  localStorage.removeItem("authToken")
+  sessionStorage.removeItem("authToken")
+}
+
 export async function getApi(path, signal) {
+  const token = getAuthToken()
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
     signal,
   })
 
-  if (!response.ok) throw new Error(`Request failed (${response.status})`)
-  return response.json()
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    if (response.status === 401) {
+      clearAuthToken()
+    }
+    const error = new Error(data?.error || `Request failed (${response.status})`)
+    error.status = response.status
+    throw error
+  }
+
+  return data
 }
 
 export async function postApi(path, body, signal) {

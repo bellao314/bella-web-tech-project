@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Icon from "../components/Icon"
-import { postApi } from "../lib/api"
+import { postApi, setAuthToken } from "../lib/api"
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -38,17 +38,12 @@ export default function LoginPage() {
           name: name.trim() || undefined,
         })
 
-        localStorage.setItem("authToken", data.token)
+        setAuthToken(data.token, true)
         navigate("/map")
       } else {
         const data = await postApi("/auth/login", { email, password })
 
-        if (rememberMe) {
-          localStorage.setItem("authToken", data.token)
-        } else {
-          sessionStorage.setItem("authToken", data.token)
-        }
-
+        setAuthToken(data.token, rememberMe)
         navigate("/map")
       }
     } catch (err) {
