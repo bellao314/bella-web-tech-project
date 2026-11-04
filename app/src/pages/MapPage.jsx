@@ -5,6 +5,7 @@ import MapView from "../components/MapView"
 import SearchBar from "../components/SearchBar"
 import { collectionFrom, vendorFrom } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
+import { getBusinessData } from "../lib/business"
 
 function isLocationInBounds(vendor, bounds) {
   if (!vendor || !bounds) return false
@@ -28,7 +29,51 @@ export default function MapPage() {
   const listRef = useRef(null)
   const navigate = useNavigate()
   const { data, loading, error } = useApiResource("/vendors", [])
-  const vendors = useMemo(() => collectionFrom(data, ["vendors"]).map(vendorFrom), [data])
+  const [businessData, setBusinessData] = useState(() => getBusinessData())
+
+  useEffect(() => {
+    const handleUpdate = (e) => setBusinessData(e?.detail || getBusinessData())
+    window.addEventListener("businessDataUpdated", handleUpdate)
+    return () => window.removeEventListener("businessDataUpdated", handleUpdate)
+  }, [])
+
+  const vendors = useMemo(() => {
+    const list = collectionFrom(data, ["vendors"]).map(vendorFrom)
+    if (!businessData) return list
+
+    const businessVendor = vendorFrom({
+      id: businessData.id || "my-business",
+      name: businessData.name || "My Business",
+      type: businessData.category || "Mobile Vendor",
+      city: businessData.city || businessData.locationName,
+      address: businessData.address || businessData.locationName,
+      hours: businessData.hours,
+      latitude: Number(businessData.latitude),
+      longitude: Number(businessData.longitude),
+      rating: "5.0",
+      distance: "0.1 mi",
+    })
+
+    if (!Number.isFinite(businessVendor.latitude) || !Number.isFinite(businessVendor.longitude)) {
+      return list
+    }
+
+    const existingIndex = list.findIndex(
+      (v) => String(v.id) === String(businessVendor.id) || v.name?.toLowerCase() === businessVendor.name?.toLowerCase()
+    )
+
+    if (existingIndex >= 0) {
+      const updated = [...list]
+      updated[existingIndex] = {
+        ...updated[existingIndex],
+        ...businessVendor,
+        id: updated[existingIndex].id,
+      }
+      return updated
+    }
+
+    return [businessVendor, ...list]
+  }, [data, businessData])
 
   // The only vendors that show up in the list view are the ones immediately displayed as pins in view
   const visibleVendors = useMemo(() => {
@@ -141,6 +186,7 @@ export default function MapPage() {
                   {(vendor.distance || vendor.city) && (
                     <small>
                       <Icon name="pin" size={13} /> {vendor.distance || vendor.city}
+                      {vendor.hours ? ` · ${vendor.hours}` : ""}
                     </small>
                   )}
                 </div>

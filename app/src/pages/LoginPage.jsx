@@ -2,10 +2,12 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Icon from "../components/Icon"
 import { postApi, setAuthToken } from "../lib/api"
+import { setStoredAccountType, saveBusinessData } from "../lib/business"
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const [isSignUp, setIsSignUp] = useState(false)
+  const [accountType, setAccountType] = useState("customer")
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -36,13 +38,21 @@ export default function LoginPage() {
           email,
           password,
           name: name.trim() || undefined,
+          accountType,
         })
 
+        setStoredAccountType(accountType)
+        if (accountType === "business") {
+          saveBusinessData({ name: name.trim() || undefined })
+        }
         setAuthToken(data.token, true)
         navigate("/map")
       } else {
         const data = await postApi("/auth/login", { email, password })
 
+        if (data.user?.accountType) {
+          setStoredAccountType(data.user.accountType)
+        }
         setAuthToken(data.token, rememberMe)
         navigate("/map")
       }
@@ -58,6 +68,7 @@ export default function LoginPage() {
     setError("")
     setPassword("")
     setConfirmPassword("")
+    setAccountType("customer")
   }
 
   return (
@@ -65,10 +76,16 @@ export default function LoginPage() {
       <div className="d-flex flex-column align-items-start col-12 col-lg-6">
         <div className="brand-mark"><Icon name="pin" size={27} /></div>
         <div className="mt-5">
-          <p className="eyebrow fs-5">{isSignUp ? "START EXPLORING" : "FIND YOUR FAVES"}</p>
+          <p className="eyebrow fs-5">
+            {isSignUp
+              ? (accountType === "business" ? "GROW YOUR BUSINESS" : "START EXPLORING")
+              : "FIND YOUR FAVES"}
+          </p>
           <p className="fs-6">
             {isSignUp
-              ? "Create an account to discover independent vendors, save your favorites, and drop pins."
+              ? (accountType === "business"
+                  ? "Create a business account to share your locations, manage your profile, and connect with customers."
+                  : "Create an account to discover independent vendors, save your favorites, and drop pins.")
               : "Discover independent vendors, save the ones you love, and always know where to find them."}
           </p>
         </div>
@@ -93,18 +110,36 @@ export default function LoginPage() {
         )}
 
         {isSignUp && (
-          <label>
-            <span>Full name or Business Name</span>
-            <div className="input-shell">
-              <Icon name="user" size={18} />
-              <input
-                type="text"
-                placeholder="Jane Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-          </label>
+          <>
+            <label htmlFor="accountType">
+              <span>Account Type</span>
+              <div className="input-shell">
+                <Icon name={accountType === "business" ? "briefcase" : "user"} size={18} />
+                <select
+                  id="accountType"
+                  name="accountType"
+                  value={accountType}
+                  onChange={(e) => setAccountType(e.target.value)}
+                >
+                  <option value="customer">Customer</option>
+                  <option value="business">Business</option>
+                </select>
+              </div>
+            </label>
+
+            <label>
+              <span>{accountType === "business" ? "Business Name" : "Full Name"}</span>
+              <div className="input-shell">
+                <Icon name={accountType === "business" ? "briefcase" : "user"} size={18} />
+                <input
+                  type="text"
+                  placeholder={accountType === "business" ? "e.g. Acme Coffee Roasters" : "Jane Doe"}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+            </label>
+          </>
         )}
 
         <label>

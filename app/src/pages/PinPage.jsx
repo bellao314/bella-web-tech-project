@@ -3,10 +3,22 @@ import { useNavigate } from "react-router-dom"
 import Icon from "../components/Icon"
 import MapView from "../components/MapView"
 import SearchBar from "../components/SearchBar"
+import { saveBusinessData } from "../lib/business"
 
 export default function PinPage() {
   const [confirmed, setConfirmed] = useState(false)
   const navigate = useNavigate()
+
+  const handleConfirmLocation = () => {
+    saveBusinessData({
+      locationName: "River Market",
+      address: "1122 NW River Street, Portland, OR 97209",
+      city: "Portland, OR",
+      latitude: 45.5231,
+      longitude: -122.6765,
+    })
+    setConfirmed(true)
+  }
   return (
   <main className="page pin-page">
     <header className="pin-header">
@@ -35,7 +47,7 @@ export default function PinPage() {
       <div className="pin-tip">
         <Icon name="location" size={18} /><span>Drag the map to position the pin precisely.</span>
       </div>
-      <button className="primary-button" onClick={() => setConfirmed(true)}>Confirm this location <Icon name="check" size={18} /></button>
+      <button className="primary-button" onClick={handleConfirmLocation}>Confirm this location <Icon name="check" size={18} /></button>
       </>}
     </section>
   </main>

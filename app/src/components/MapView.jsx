@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import {
+  google,
   APIProvider,
   Map,
   useMap,
