@@ -1,126 +1,198 @@
-/**
- * Copyright 2024 Google LLC
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *    https://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
-import {useEffect, useState, useRef, useCallback} from 'react';
-
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   APIProvider,
   Map,
   useMap,
   AdvancedMarker,
-  Pin
+  Pin,
+  InfoWindow,
 } from '@vis.gl/react-google-maps';
 
-import {MarkerClusterer} from '@googlemaps/markerclusterer';
-
-import {Circle} from './circle';
-
-const PoiMarkers = ({ pois }) => {
+function BoundsTracker({ onBoundsChange }) {
   const map = useMap();
-  const [markers, setMarkers] = useState({});
-  const clusterer = useRef(null);
-  const [circleCenter, setCircleCenter] = useState(null);
 
-  const handleClick = useCallback((ev) => {
-    if(!map) return;
-    if(!ev.latLng) return;
-    console.log('marker clicked: ', ev.latLng.toString());
-    map.panTo(ev.latLng);
-    setCircleCenter(ev.latLng);
-  }, [map]);
-  // Initialize MarkerClusterer, if the map has changed
   useEffect(() => {
-    if (!map) return;
-    if (!clusterer.current) {
-      clusterer.current = new MarkerClusterer({map});
-    }
-  }, [map]);
+    if (!map || !onBoundsChange) return;
 
-  // Update markers, if the markers array has changed
-  useEffect(() => {
-    clusterer.current?.clearMarkers();
-    clusterer.current?.addMarkers(Object.values(markers));
-  }, [markers]);
-
-  const setMarkerRef = (marker, key) => {
-    if (marker && markers[key]) return;
-    if (!marker && !markers[key]) return;
-
-    setMarkers(prev => {
-      if (marker) {
-        return {...prev, [key]: marker};
-      } else {
-        const newMarkers = {...prev};
-        delete newMarkers[key];
-        return newMarkers;
+    const reportBounds = () => {
+      const b = map.getBounds();
+      if (b) {
+        const ne = b.getNorthEast();
+        const sw = b.getSouthWest();
+        onBoundsChange({
+          north: ne.lat(),
+          south: sw.lat(),
+          east: ne.lng(),
+          west: sw.lng(),
+        });
       }
-    });
-  };
+    };
+
+    reportBounds();
+    const listener = map.addListener('bounds_changed', reportBounds);
+    return () => {
+      google.maps.event.removeListener(listener);
+    };
+  }, [map, onBoundsChange]);
+
+  return null;
+}
+
+const VendorMarkers = ({
+  vendors,
+  selectedVendorId,
+  onSelectVendor,
+}) => {
+  const map = useMap();
+
+  const selectedVendor = useMemo(() => {
+    if (!selectedVendorId) return null;
+    return vendors.find((v) => String(v.id) === String(selectedVendorId)) || null;
+  }, [vendors, selectedVendorId]);
+
+  const handleMarkerClick = useCallback(
+    (vendor) => {
+      if (!map) return;
+      if (Number.isFinite(vendor.latitude) && Number.isFinite(vendor.longitude)) {
+        map.panTo({ lat: vendor.latitude, lng: vendor.longitude });
+      }
+      onSelectVendor?.(vendor);
+    },
+    [map, onSelectVendor]
+  );
 
   return (
     <>
-      <Circle
-          radius={800}
-          center={circleCenter}
-          strokeColor={'#0c4cb3'}
-          strokeOpacity={1}
-          strokeWeight={3}
-          fillColor={'#3b82f6'}
-          fillOpacity={0.3}
-        />
-      {pois.map(poi => (
-        <AdvancedMarker
-          key={poi.key}
-          position={poi.location}
-          ref={marker => setMarkerRef(marker, poi.key)}
-          clickable={true}
-          onClick={handleClick}
+      {vendors.map((vendor) => {
+        const isSelected = String(vendor.id) === String(selectedVendorId);
+        return (
+          <AdvancedMarker
+            key={vendor.id}
+            position={{ lat: vendor.latitude, lng: vendor.longitude }}
+            clickable={true}
+            onClick={() => handleMarkerClick(vendor)}
           >
-            <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} />
-        </AdvancedMarker>
-      ))}
+            <Pin
+              background={isSelected ? '#9c88c0' : '#422e65'}
+              glyphColor="#ffffff"
+              borderColor={isSelected ? '#422e65' : '#2a1d42'}
+              scale={isSelected ? 1.2 : 1.0}
+            />
+          </AdvancedMarker>
+        );
+      })}
+
+      {selectedVendor &&
+        Number.isFinite(selectedVendor.latitude) &&
+        Number.isFinite(selectedVendor.longitude) && (
+          <InfoWindow
+            position={{ lat: selectedVendor.latitude, lng: selectedVendor.longitude }}
+            onCloseClick={() => onSelectVendor?.(null)}
+          >
+            <div style={{ padding: '4px 6px', minWidth: '150px', color: '#1f2521', fontFamily: 'Inter, sans-serif' }}>
+              <div style={{ fontWeight: 700, fontSize: '13px', marginBottom: '2px' }}>
+                {selectedVendor.name}
+              </div>
+              <div style={{ fontSize: '11px', color: '#847f8b', marginBottom: '4px' }}>
+                {selectedVendor.type} {selectedVendor.rating ? `· ★ ${selectedVendor.rating}` : ''}
+              </div>
+              {selectedVendor.city && (
+                <div style={{ fontSize: '10px', color: '#422e65', fontWeight: 600, marginBottom: '8px' }}>
+                  {selectedVendor.city}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => onSelectVendor?.(selectedVendor, true)}
+                style={{
+                  width: '100%',
+                  padding: '6px 10px',
+                  background: '#422e65',
+                  color: '#ffffff',
+                  border: 0,
+                  borderRadius: '7px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                View details
+              </button>
+            </div>
+          </InfoWindow>
+        )}
     </>
   );
 };
 
-function MapView({ vendors = [] }) {
-  const locations = vendors
-    .filter((vendor) => Number.isFinite(vendor.latitude) && Number.isFinite(vendor.longitude))
-    .map((vendor, index) => ({ key: String(vendor.id || index), location: { lat: vendor.latitude, lng: vendor.longitude } }));
-  const center = locations[0]?.location;
+function MapView({
+  vendors = [],
+  onBoundsChange,
+  selectedVendorId = null,
+  onSelectVendor,
+  placing = false,
+}) {
+  const validVendors = useMemo(() => {
+    return vendors.filter(
+      (v) => Number.isFinite(v.latitude) && Number.isFinite(v.longitude)
+    );
+  }, [vendors]);
+
+  // Center on St. Louis coordinates or the first vendor's location
+  const center = useMemo(() => {
+    if (placing) {
+      return { lat: 45.523064, lng: -122.676483 }; // Portland for placing pin demo
+    }
+    if (validVendors.length > 0) {
+      return { lat: validVendors[0].latitude, lng: validVendors[0].longitude };
+    }
+    return { lat: 38.635745, lng: -90.234145 }; // St. Louis Midtown
+  }, [validVendors, placing]);
+
+  const handleCameraChanged = useCallback(
+    (ev) => {
+      if (onBoundsChange && ev.detail.bounds) {
+        onBoundsChange(ev.detail.bounds);
+      }
+    },
+    [onBoundsChange]
+  );
 
   if (!import.meta.env.VITE_GOOGLE_API_KEY) {
-    return <div className="map-artwork"><p className="map-empty-state">Map coordinates will appear when supplied by the API.</p></div>;
+    return (
+      <div className="map-artwork">
+        <p className="map-empty-state">Map coordinates will appear when supplied by the API.</p>
+      </div>
+    );
   }
 
   return (
-    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_API_KEY} onLoad={() => console.log('Maps API has loaded.')}>
+    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_API_KEY}>
       <Map
-        defaultZoom={center ? 13 : 2}
-        defaultCenter={center || { lat: 0, lng: 0 }}
-        style={{width: '100%', height: '100vh'}}
-        onCameraChanged={ (ev) =>
-          console.log('camera changed:', ev.detail.center, 'zoom:', ev.detail.zoom)
-        }
-        mapId='da37f3254c6a6d1c'
-        >
-        <PoiMarkers pois={locations} />
+        defaultZoom={placing ? 14 : 12}
+        defaultCenter={center}
+        style={{ width: '100%', height: '100vh' }}
+        onCameraChanged={handleCameraChanged}
+        mapId="da37f3254c6a6d1c"
+        gestureHandling="greedy"
+        disableDefaultUI={false}
+      >
+        <BoundsTracker onBoundsChange={onBoundsChange} />
+
+        {placing ? (
+          <AdvancedMarker position={center} draggable={true}>
+            <Pin background="#422e65" glyphColor="#ffffff" borderColor="#2a1d42" />
+          </AdvancedMarker>
+        ) : (
+          <VendorMarkers
+            vendors={validVendors}
+            selectedVendorId={selectedVendorId}
+            onSelectVendor={onSelectVendor}
+          />
+        )}
       </Map>
     </APIProvider>
-  )
-};
+  );
+}
 
 export default MapView;

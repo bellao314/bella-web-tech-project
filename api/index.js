@@ -9,6 +9,8 @@ dotenv.config();
 
 import auth from "./routes/auth.js";
 import user from "./routes/user.js";
+import vendors from "./routes/vendors.js";
+import recommendations from "./routes/recommendations.js";
 import mapsRouter from "./routes/maps.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware.js";
 
@@ -20,6 +22,8 @@ app.get("/health", (_req, res) => res.json({ status: "ok" }));
 app.use("/api/auth", auth);
 app.use("/api/user", user);
 app.use("/api/profile", user);
+app.use("/api/vendors", vendors);
+app.use("/api/recommendations", recommendations);
 app.use("/api/maps", mapsRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);

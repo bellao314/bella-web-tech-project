@@ -91,16 +91,15 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
 .pin-c { top: 252px; right: 52px; background: #7b877e; }
 .pin-d { top: 177px; right: 78px; background: #7b877e; }
 .location-button { position: absolute; z-index: 5; right: 18px; top: 331px; width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: white; box-shadow: 0 4px 15px rgba(35,46,38,.14); cursor: pointer; }
-.vendor-sheet { position: absolute; z-index: 6; height: 410px; left: 0; right: 0; bottom: 66px; padding: 8px 18px 0; border-radius: 26px 26px 0 0; background: var(--paper); box-shadow: 0 -8px 30px rgba(42,52,45,.12); }
-.sheet-handle { width: 40px; height: 4px; margin: 0 auto 15px; border-radius: 9px; background: #cfd4cd; }
-.sheet-title { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.vendor-sheet { position: absolute; z-index: 6; height: 300px; left: 0; right: 0; bottom: 66px; padding: 8px 18px 0; border-radius: 26px 26px 0 0; background: var(--paper); box-shadow: 0 -8px 30px rgba(42,52,45,.12); }
+.sheet-title { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; padding-top: 10px;}
 .sheet-title h3, .recommend-intro h3, .profile-section h3, .pin-sheet h3 { margin: 0; font: 700 18px/1.2 'Inter'; letter-spacing: -.02em; }
 .sheet-title p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
 .filter-button { padding: 7px 10px; border: 1px solid var(--line); border-radius: 9px; background: white; font-size: 11px; font-weight: 700; }
 .filter-button span { padding: 1px 5px; margin-left: 3px; border-radius: 8px; background: var(--lime); }
-.vendor-list { height: 320px; overflow: auto; scrollbar-width: none; }
-.vendor-card { width: 100%; padding: 10px 0; display: flex; gap: 11px; align-items: center; border: 0; border-bottom: 1px solid var(--line); background: transparent; text-align: left; cursor: pointer; }
-.vendor-card.selected { padding-left: 8px; padding-right: 8px; border-radius: 13px; background: #edf2e9; border-color: transparent; }
+.vendor-list { height: calc(100% - 58px); overflow-y: auto; scrollbar-width: none; padding-bottom: 12px; scroll-behavior: smooth; }
+.vendor-card { width: 100%; padding: 10px 0; display: flex; gap: 11px; align-items: center; border: 0; border-bottom: 1px solid var(--line); background: transparent; text-align: left; cursor: pointer; transition: all 0.2s ease; }
+.vendor-card.selected { padding-left: 10px; padding-right: 10px; border-radius: 14px; background: var(--sage); border: 1.5px solid var(--forest); }
 .vendor-thumb, .mini-thumb { width: 52px; height: 52px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 12px; background: #dfe2da; color: #798079; font: 700 18px 'Inter'; }
 .vendor-info { flex: 1; min-width: 0; }
 .vendor-info > div { display: flex; justify-content: space-between; }
