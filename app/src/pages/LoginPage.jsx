@@ -38,6 +38,7 @@ export default function LoginPage() {
           email,
           password,
           name: name.trim() || undefined,
+          type: accountType,
           accountType,
         })
 

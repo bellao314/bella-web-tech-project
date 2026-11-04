@@ -43,6 +43,7 @@ async function seed() {
     const user = existingUser ?? await db.orm.public.User.create({
       email: vendors[i].email,
       name: vendors[i].name,
+      type: "business",
       updatedAt: new Date(),
     });
 

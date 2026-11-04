@@ -54,22 +54,15 @@ async function handleProfile(req, res, next) {
 			return res.status(404).json({ error: "User not found." });
 		}
 
-		let accountType = payload?.accountType;
-		if (!accountType) {
-			try {
-				const vendor = await db.orm.public.Vendor.where({ email: user.email }).first();
-				if (vendor) accountType = "business";
-			} catch {
-				// fallback
-			}
-		}
+		const userType = user.type || payload?.type || payload?.accountType || "customer";
 
 		return res.json({
 			profile: {
 				id: user.id,
 				name: user.name,
 				email: user.email,
-				accountType: accountType || "customer",
+				type: userType,
+				accountType: userType,
 				createdAt: user.createdAt,
 				updatedAt: user.updatedAt,
 			},

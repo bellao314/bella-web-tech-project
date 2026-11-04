@@ -38,15 +38,7 @@ async function handleLogin(req, res, next) {
       userId: user.id,
     });
 
-    let accountType = "customer";
-    try {
-      const vendor = await db.orm.public.Vendor.where({ email: user.email }).first();
-      if (vendor) {
-        accountType = "business";
-      }
-    } catch {
-      // fallback
-    }
+    const userType = user.type || "customer";
 
     const jwtSecret = process.env.JWT_SECRET || "default_jwt_secret_dev_mode";
     const token = jwt.sign(
@@ -54,7 +46,8 @@ async function handleLogin(req, res, next) {
         id: user.id,
         email: user.email,
         name: user.name,
-        accountType,
+        type: userType,
+        accountType: userType,
       },
       jwtSecret,
       { expiresIn: "24h" }
@@ -66,7 +59,8 @@ async function handleLogin(req, res, next) {
         id: user.id,
         email: user.email,
         name: user.name,
-        accountType,
+        type: userType,
+        accountType: userType,
       },
     });
   } catch (error) {
@@ -79,7 +73,8 @@ router.post("/", handleLogin);
 
 // POST /api/auth/register - Register a new user
 router.post("/register", async (req, res, next) => {
-  const { email, password, name, accountType } = req.body || {};
+  const { email, password, name, accountType, type } = req.body || {};
+  const userType = type || accountType || "customer";
 
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required." });
@@ -96,6 +91,7 @@ router.post("/register", async (req, res, next) => {
       email,
       password: hashedPassword,
       name: name || null,
+      type: userType,
       updatedAt: new Date(),
     });
 
@@ -104,7 +100,7 @@ router.post("/register", async (req, res, next) => {
       userId: user.id,
     });
 
-    if (accountType === "business") {
+    if (userType === "business") {
       try {
         await db.orm.public.Vendor.create({
           name: name || "My Business",
@@ -123,7 +119,8 @@ router.post("/register", async (req, res, next) => {
         id: user.id,
         email: user.email,
         name: user.name,
-        accountType: accountType || "customer",
+        type: user.type,
+        accountType: user.type,
       },
       jwtSecret,
       { expiresIn: "24h" }
@@ -135,7 +132,8 @@ router.post("/register", async (req, res, next) => {
         id: user.id,
         email: user.email,
         name: user.name,
-        accountType: accountType || "customer",
+        type: user.type,
+        accountType: user.type,
       },
     });
   } catch (error) {

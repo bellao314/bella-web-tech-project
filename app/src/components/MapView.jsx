@@ -1,6 +1,5 @@
 import { useEffect, useCallback, useMemo } from 'react';
 import {
-  google,
   APIProvider,
   Map,
   useMap,
@@ -32,7 +31,7 @@ function BoundsTracker({ onBoundsChange }) {
     reportBounds();
     const listener = map.addListener('bounds_changed', reportBounds);
     return () => {
-      google.maps.event.removeListener(listener);
+      map.removeListener(listener);
     };
   }, [map, onBoundsChange]);
 
