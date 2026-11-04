@@ -1,0 +1,371 @@
+[
+  {
+    "id": "column.public.Vendor.email",
+    "label": "Add column \"email\" to \"Vendor\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "email",
+        "table": "Vendor"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"email\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Vendor",
+          "email"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"email\"",
+        "sql": "ALTER TABLE \"public\".\"Vendor\" ADD COLUMN \"email\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"email\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Vendor",
+          "email"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.Vendor.phone",
+    "label": "Add column \"phone\" to \"Vendor\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "phone",
+        "table": "Vendor"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"phone\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Vendor",
+          "phone"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"phone\"",
+        "sql": "ALTER TABLE \"public\".\"Vendor\" ADD COLUMN \"phone\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"phone\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Vendor",
+          "phone"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.Vendor.website",
+    "label": "Add column \"website\" to \"Vendor\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "website",
+        "table": "Vendor"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"website\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Vendor",
+          "website"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"website\"",
+        "sql": "ALTER TABLE \"public\".\"Vendor\" ADD COLUMN \"website\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"website\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Vendor",
+          "website"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.User.type",
+    "label": "Add column \"type\" to \"User\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "type",
+        "table": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"type\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "User",
+          "type"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"type\"",
+        "sql": "ALTER TABLE \"public\".\"User\" ADD COLUMN \"type\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"type\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "User",
+          "type"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-User-type",
+    "label": "Data transform: backfill-User-type",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-User-type has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"User\" WHERE \"type\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-User-type",
+        "sql": "UPDATE \"public\".\"User\" SET \"type\" = $1, \"updatedAt\" = $2 WHERE \"type\" IS NULL",
+        "params": [
+          "customer",
+          "2026-11-04T05:16:35.179Z"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-User-type resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"User\" WHERE \"type\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.User.type",
+    "label": "Set NOT NULL on \"User\".\"type\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "type",
+        "table": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"type\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "User",
+          "type"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"type\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"User\" WHERE \"type\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"type\"",
+        "sql": "ALTER TABLE \"public\".\"User\" ALTER COLUMN \"type\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"type\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "User",
+          "type",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.Vendor.city",
+    "label": "Add column \"city\" to \"Vendor\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "city",
+        "table": "Vendor"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"city\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Vendor",
+          "city"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"city\"",
+        "sql": "ALTER TABLE \"public\".\"Vendor\" ADD COLUMN \"city\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"city\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Vendor",
+          "city"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-Vendor-city",
+    "label": "Data transform: backfill-Vendor-city",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-Vendor-city has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"Vendor\" WHERE \"city\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-Vendor-city",
+        "sql": "UPDATE \"public\".\"Vendor\" SET \"city\" = $1 WHERE \"city\" IS NULL",
+        "params": [
+          "Unknown"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-Vendor-city resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"Vendor\" WHERE \"city\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.Vendor.city",
+    "label": "Set NOT NULL on \"Vendor\".\"city\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "city",
+        "table": "Vendor"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"city\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Vendor",
+          "city"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"city\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"Vendor\" WHERE \"city\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"city\"",
+        "sql": "ALTER TABLE \"public\".\"Vendor\" ALTER COLUMN \"city\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"city\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "Vendor",
+          "city",
+          "NO"
+        ]
+      }
+    ]
+  }
+]

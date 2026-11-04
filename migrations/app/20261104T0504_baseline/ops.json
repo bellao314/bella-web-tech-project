@@ -1,0 +1,382 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.Location",
+    "label": "Create table \"Location\"",
+    "summary": "Creates table \"Location\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Location"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Location\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Location\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Location\"",
+        "sql": "CREATE TABLE \"public\".\"Location\" (\n  \"id\" SERIAL NOT NULL,\n  \"latitude\" numeric NOT NULL,\n  \"longitude\" numeric NOT NULL,\n  \"vendorId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Location\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Location\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.User",
+    "label": "Create table \"User\"",
+    "summary": "Creates table \"User\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"User\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"User\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"User\"",
+        "sql": "CREATE TABLE \"public\".\"User\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"email\" text NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"name\" text,\n  \"password\" text,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"User\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"User\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.Vendor",
+    "label": "Create table \"Vendor\"",
+    "summary": "Creates table \"Vendor\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Vendor"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Vendor\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Vendor\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Vendor\"",
+        "sql": "CREATE TABLE \"public\".\"Vendor\" (\n  \"id\" SERIAL NOT NULL,\n  \"name\" text NOT NULL,\n  \"type\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Vendor\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Vendor\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.logs",
+    "label": "Create table \"logs\"",
+    "summary": "Creates table \"logs\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "logs"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"logs\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"logs\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"logs\"",
+        "sql": "CREATE TABLE \"public\".\"logs\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"message\" text,\n  \"type\" text NOT NULL,\n  \"userId\" int4,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"logs_type_check_ed993c44\" CHECK (\"type\" IN ('USER_LOGIN_FAILURE', 'USER_LOGIN_LOCAL', 'USER_PASSWORD_CHANGE'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"logs\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"logs\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Location.Location_vendorId_key",
+    "label": "Add unique constraint on \"Location\" (vendorId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Location_vendorId_key",
+        "table": "Location"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Location_vendorId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Location_vendorId_key",
+          "public",
+          "\"public\".\"Location\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Location_vendorId_key\"",
+        "sql": "ALTER TABLE \"public\".\"Location\" ADD CONSTRAINT \"Location_vendorId_key\" UNIQUE (\"vendorId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Location_vendorId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Location_vendorId_key",
+          "public",
+          "\"public\".\"Location\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.User.User_email_key",
+    "label": "Add unique constraint on \"User\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "User_email_key",
+        "table": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"User_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "User_email_key",
+          "public",
+          "\"public\".\"User\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"User_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"User\" ADD CONSTRAINT \"User_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"User_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "User_email_key",
+          "public",
+          "\"public\".\"User\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.logs.logs_userId_idx_a489d58a",
+    "label": "Create index \"logs_userId_idx_a489d58a\" on \"logs\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "logs_userId_idx_a489d58a",
+        "table": "logs"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"logs_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"logs_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"logs_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"logs_userId_idx_a489d58a\" ON \"public\".\"logs\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"logs_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"logs_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Location.Location_vendorId_fkey",
+    "label": "Add foreign key \"Location_vendorId_fkey\" on \"Location\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Location_vendorId_fkey",
+        "table": "Location"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Location_vendorId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Location_vendorId_fkey",
+          "public",
+          "\"public\".\"Location\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Location_vendorId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Location\"\nADD CONSTRAINT \"Location_vendorId_fkey\"\nFOREIGN KEY (\"vendorId\")\nREFERENCES \"public\".\"Vendor\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Location_vendorId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Location_vendorId_fkey",
+          "public",
+          "\"public\".\"Location\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.logs.logs_userId_fkey",
+    "label": "Add foreign key \"logs_userId_fkey\" on \"logs\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "logs_userId_fkey",
+        "table": "logs"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"logs_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "logs_userId_fkey",
+          "public",
+          "\"public\".\"logs\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"logs_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"logs\"\nADD CONSTRAINT \"logs_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"User\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"logs_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "logs_userId_fkey",
+          "public",
+          "\"public\".\"logs\""
+        ]
+      }
+    ]
+  }
+]

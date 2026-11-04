@@ -40,25 +40,34 @@ async function seed() {
       .where({ email: vendors[i].email })
       .first();
 
-    const user = existingUser ?? await db.orm.public.User.create({
-      email: vendors[i].email,
-      name: vendors[i].name,
-      type: "business",
-      updatedAt: new Date(),
-    });
+    const user = existingUser
+      ? await db.orm.public.User.where({ id: existingUser.id }).update({ type: "business" })
+      : await db.orm.public.User.create({
+          email: vendors[i].email,
+          name: vendors[i].name,
+          type: "business",
+          updatedAt: new Date(),
+        });
 
     const existingVendor = await db.orm.public.Vendor
       .where({ name: vendors[i].name, type: vendors[i].type })
       .first();
 
-    const vendor = existingVendor ?? await db.orm.public.Vendor.create({
-      name: vendors[i].name,
-      type: vendors[i].type,
-      city: vendors[i].city,
-      email: vendors[i].email ?? null,
-      phone: vendors[i].phone ?? null,
-      website: vendors[i].website ?? null
-    });
+    const vendor = (existingVendor
+      ? await db.orm.public.Vendor.where({ id: existingVendor.id }).update({
+          city: vendors[i].city,
+          email: vendors[i].email ?? null,
+          phone: vendors[i].phone ?? null,
+          website: vendors[i].website ?? null,
+        })
+      : await db.orm.public.Vendor.create({
+          name: vendors[i].name,
+          type: vendors[i].type,
+          city: vendors[i].city,
+          email: vendors[i].email ?? null,
+          phone: vendors[i].phone ?? null,
+          website: vendors[i].website ?? null,
+        })) ?? existingVendor!;
 
     const existingLoc = await db.orm.public.Location
       .where({ vendorId: vendor.id })
