@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   APIProvider,
   Map,
@@ -7,36 +7,6 @@ import {
   Pin,
   InfoWindow,
 } from '@vis.gl/react-google-maps';
-
-function BoundsTracker({ onBoundsChange }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (!map || !onBoundsChange) return;
-
-    const reportBounds = () => {
-      const b = map.getBounds();
-      if (b) {
-        const ne = b.getNorthEast();
-        const sw = b.getSouthWest();
-        onBoundsChange({
-          north: ne.lat(),
-          south: sw.lat(),
-          east: ne.lng(),
-          west: sw.lng(),
-        });
-      }
-    };
-
-    reportBounds();
-    const listener = map.addListener('bounds_changed', reportBounds);
-    return () => {
-      map.removeListener(listener);
-    };
-  }, [map, onBoundsChange]);
-
-  return null;
-}
 
 const VendorMarkers = ({
   vendors,
@@ -177,8 +147,6 @@ function MapView({
         gestureHandling="greedy"
         disableDefaultUI={false}
       >
-        <BoundsTracker onBoundsChange={onBoundsChange} />
-
         {placing ? (
           <AdvancedMarker position={center} draggable={true}>
             <Pin background="#422e65" glyphColor="#ffffff" borderColor="#2a1d42" />
