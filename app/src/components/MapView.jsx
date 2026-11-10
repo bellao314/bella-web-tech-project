@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 import Icon from './Icon';
 import {
   APIProvider,
@@ -22,6 +22,13 @@ const VendorMarkers = ({
     if (!selectedVendorId) return null;
     return vendors.find((v) => String(v.id) === String(selectedVendorId)) || null;
   }, [vendors, selectedVendorId]);
+
+  useEffect(() => {
+    if (!map || !selectedVendor) return;
+    if (Number.isFinite(selectedVendor.latitude) && Number.isFinite(selectedVendor.longitude)) {
+      map.panTo({ lat: selectedVendor.latitude, lng: selectedVendor.longitude });
+    }
+  }, [map, selectedVendor]);
 
   const handleMarkerClick = useCallback(
     (vendor) => {

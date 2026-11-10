@@ -1,13 +1,23 @@
 import { useRef } from "react"
 import Icon from "./Icon"
 
-export default function SearchBar({ placeholder = "Search", value, onChange, onClick, ...props }) {
+export default function SearchBar({ placeholder = "Search", value, onChange, onClear, onClick, ...props }) {
   const inputRef = useRef(null)
   const isControlled = value !== undefined || onChange !== undefined
 
   const handleClick = (e) => {
     inputRef.current?.focus()
     onClick?.(e)
+  }
+
+  const handleClear = (e) => {
+    e.stopPropagation()
+    if (onClear) {
+      onClear()
+    } else if (onChange) {
+      onChange({ target: { value: "" } })
+    }
+    inputRef.current?.focus()
   }
 
   return (
@@ -31,6 +41,26 @@ export default function SearchBar({ placeholder = "Search", value, onChange, onC
         {...(isControlled ? { value: value ?? "", onChange } : {})}
         {...props}
       />
+      {Boolean(value) && (
+        <button
+          type="button"
+          onClick={handleClear}
+          aria-label="Clear search"
+          style={{
+            border: 0,
+            background: "none",
+            color: "#847f8b",
+            cursor: "pointer",
+            padding: "2px 4px",
+            fontSize: "16px",
+            lineHeight: 1,
+            display: "grid",
+            placeItems: "center",
+          }}
+        >
+          ×
+        </button>
+      )}
     </div>
   )
 }

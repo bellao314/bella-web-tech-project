@@ -7,6 +7,7 @@ import { collectionFrom, vendorFrom } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
 import { useFavorites } from "../hooks/useFavorites"
 import { getBusinessData } from "../lib/business"
+import { matchesVendorSearch } from "../lib/search"
 
 function isLocationInBounds(vendor, bounds) {
   if (!vendor || !bounds) return false
@@ -27,6 +28,7 @@ function isLocationInBounds(vendor, bounds) {
 export default function MapPage() {
   const [selected, setSelected] = useState(null)
   const [bounds, setBounds] = useState(null)
+  const [searchQuery, setSearchQuery] = useState("")
   const listRef = useRef(null)
   const navigate = useNavigate()
   const { data, loading, error } = useApiResource("/vendors", [])
@@ -77,11 +79,21 @@ export default function MapPage() {
     return [businessVendor, ...list]
   }, [data, businessData])
 
-  // The only vendors that show up in the list view are the ones immediately displayed as pins in view
+  const searchedVendors = useMemo(() => {
+    if (!searchQuery.trim()) return vendors
+    const q = searchQuery.toLowerCase().trim()
+    return vendors.filter((vendor) => matchesVendorSearch(vendor, q))
+  }, [vendors, searchQuery])
+
+  // Display vendors within bounds, or all search matches if none fall within current view
   const visibleVendors = useMemo(() => {
-    if (!bounds) return vendors
-    return vendors.filter((vendor) => isLocationInBounds(vendor, bounds))
-  }, [vendors, bounds])
+    if (!bounds) return searchedVendors
+    const inBounds = searchedVendors.filter((vendor) => isLocationInBounds(vendor, bounds))
+    if (searchQuery.trim() && inBounds.length === 0) {
+      return searchedVendors
+    }
+    return inBounds
+  }, [searchedVendors, bounds, searchQuery])
 
   // Automatically scroll the list to the selected vendor when its pin is clicked
   useEffect(() => {
@@ -139,18 +151,23 @@ export default function MapPage() {
           </header>
 
           <div className="map-search">
-            <SearchBar placeholder="Search vendors or categories" />
+            <SearchBar
+              placeholder="Search vendors or categories"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onClear={() => setSearchQuery("")}
+            />
           </div>
         </div>
 
         <section className="vendor-sheet">
           <div className="sheet-title">
             <div>
-              <h3>Vendors in view</h3>
+              <h3>{searchQuery.trim() ? "Search results" : "Vendors in view"}</h3>
               <p>
                 {loading
                   ? "Loading vendors…"
-                  : `${visibleVendors.length} ${visibleVendors.length === 1 ? "place" : "places"} nearby`}
+                  : `${visibleVendors.length} ${visibleVendors.length === 1 ? "place" : "places"} ${searchQuery.trim() ? "found" : "nearby"}`}
               </p>
             </div>
           </div>
@@ -158,7 +175,11 @@ export default function MapPage() {
           <div className="vendor-list" ref={listRef}>
             {error && <p className="empty-state">Unable to load vendors.</p>}
             {!loading && !error && visibleVendors.length === 0 && (
-              <p className="empty-state">No vendors are available in this area.</p>
+              <p className="empty-state">
+                {searchQuery.trim()
+                  ? `No vendors found matching "${searchQuery}".`
+                  : "No vendors are available in this area."}
+              </p>
             )}
             {visibleVendors.map((vendor, index) => {
               const id = vendor.id ? String(vendor.id) : String(index)
@@ -224,7 +245,7 @@ export default function MapPage() {
         </section>
       </div>
       <MapView
-        vendors={vendors}
+        vendors={searchedVendors}
         onBoundsChange={setBounds}
         selectedVendorId={selected}
         onSelectVendor={handleSelectVendor}
