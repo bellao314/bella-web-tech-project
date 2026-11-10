@@ -1,28 +1,24 @@
-import { Outlet, Route, Routes, useLocation } from "react-router-dom"
+import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom"
 import BottomNav from "./components/BottomNav"
-import LoginPage from "./pages/LoginPage"
-import MapPage from "./pages/MapPage"
+import HomePage from "./pages/HomePage"
 import RecommendedPage from "./pages/RecommendedPage"
 import ProfilePage from "./pages/ProfilePage"
 import PinPage from "./pages/PinPage"
-import VendorInfoPage from "./pages/VendorInfoPage";
-
-// const navigation = [
-//   { path: "/", label: "Sign in", number: "01", end: true },
-//   { path: "/map", label: "Map & vendors", number: "02" },
-//   { path: "/recommended", label: "Recommended", number: "03" },
-//   { path: "/profile", label: "Profile", number: "04" },
-//   { path: "/pin", label: "Drop a pin", number: "05" },
-// ]
+import VendorInfoPage from "./pages/VendorInfoPage"
+import { useAuth } from "./hooks/useAuth"
 
 function AppLayout() {
   const { pathname } = useLocation()
-  const showNav = ["/map", "/recommended", "/profile"].includes(pathname) || pathname.startsWith("/vendor/")
+  const { isAuthenticated } = useAuth()
+  const isHomeOrMap = pathname === "/" || pathname === "/map"
+  const showNav = isHomeOrMap
+    ? isAuthenticated
+    : ["/recommended", "/profile"].includes(pathname) || pathname.startsWith("/vendor/")
 
   return (
     <div className="prototype-shell">
-        <div className="content"><Outlet /></div>
-        {showNav && <BottomNav />}
+      <div className="content"><Outlet /></div>
+      {showNav && <BottomNav />}
     </div>
   )
 }
@@ -31,8 +27,8 @@ export default function App() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        <Route index element={<LoginPage />} />
-        <Route path="map" element={<MapPage />} />
+        <Route index element={<HomePage />} />
+        <Route path="map" element={<Navigate to="/" replace />} />
         <Route path="recommended" element={<RecommendedPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="pin" element={<PinPage />} />

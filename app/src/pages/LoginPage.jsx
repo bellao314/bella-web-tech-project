@@ -1,11 +1,13 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Icon from "../components/Icon"
-import { postApi, setAuthToken } from "../lib/api"
+import { postApi } from "../lib/api"
 import { setStoredAccountType, saveBusinessData } from "../lib/business"
+import { useAuth } from "../hooks/useAuth"
 
-export default function LoginPage() {
+export default function LoginPage({ onLoginSuccess }) {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [isSignUp, setIsSignUp] = useState(false)
   const [accountType, setAccountType] = useState("customer")
   const [name, setName] = useState("")
@@ -46,16 +48,24 @@ export default function LoginPage() {
         if (accountType === "business") {
           saveBusinessData({ name: name.trim() || undefined })
         }
-        setAuthToken(data.token, true)
-        navigate("/map")
+        login(data.token, true)
+        if (onLoginSuccess) {
+          onLoginSuccess(data)
+        } else {
+          navigate("/")
+        }
       } else {
         const data = await postApi("/auth/login", { email, password })
 
         if (data.user?.accountType) {
           setStoredAccountType(data.user.accountType)
         }
-        setAuthToken(data.token, rememberMe)
-        navigate("/map")
+        login(data.token, rememberMe)
+        if (onLoginSuccess) {
+          onLoginSuccess(data)
+        } else {
+          navigate("/")
+        }
       }
     } catch (err) {
       setError(err.message || `Failed to ${isSignUp ? "create account" : "sign in"}. Please try again.`)
@@ -142,6 +152,8 @@ export default function LoginPage() {
             </label>
           </>
         )}
+
+        <img src="./assets/vendor-pic.jpg" alt="Vendor Image by Kampus Production" />
 
         <label>
           <span>Email address</span>

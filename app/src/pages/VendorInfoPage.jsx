@@ -126,7 +126,7 @@ export default function VendorInfoPage() {
             <button
               type="button"
               className="primary-button"
-              onClick={() => navigate("/map")}
+              onClick={() => navigate("/")}
             >
               View on Map <Icon name="map" size={18} />
             </button>

@@ -2,8 +2,9 @@ import { useMemo, useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import Icon from "../components/Icon"
 import SettingsList from "../components/SettingsList"
-import { collectionFrom, valueFrom, vendorFrom, getAuthToken, clearAuthToken } from "../lib/api"
+import { collectionFrom, valueFrom, vendorFrom, getAuthToken } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
+import { useAuth } from "../hooks/useAuth"
 import {
   PRESET_LOCATIONS,
   PRESET_HOURS,
@@ -33,7 +34,8 @@ const formatDate = (value) => {
 
 export default function ProfilePage() {
   const navigate = useNavigate()
-  const token = getAuthToken()
+  const { logout, token: authToken } = useAuth()
+  const token = authToken || getAuthToken()
   const { data, loading, error } = useApiResource(token ? "/user/profile" : null, null)
   const profile = data?.profile || data?.data || data
   const favorites = useMemo(() => collectionFrom(profile?.favorites || profile, ["favorites", "vendors"]).map(vendorFrom), [profile])
@@ -137,7 +139,7 @@ export default function ProfilePage() {
   }
 
   const handleSignOut = () => {
-    clearAuthToken()
+    logout()
     navigate("/")
   }
 
@@ -435,7 +437,7 @@ export default function ProfilePage() {
               isBusiness
                 ? [
                     ["View business details page", "briefcase", () => navigate("/vendor/my-business")],
-                    ["View live pin on map", "map", () => navigate("/map")],
+                    ["View live pin on map", "map", () => navigate("/")],
                     ["Drop or move map pin", "pin", () => navigate("/pin")],
                     ["Account settings", "user"],
                   ]

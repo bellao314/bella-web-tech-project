@@ -92,11 +92,13 @@ export function setAuthToken(token, rememberMe = false) {
     localStorage.removeItem("authToken")
     sessionStorage.setItem("authToken", token)
   }
+  window.dispatchEvent(new CustomEvent("authChange", { detail: { token } }))
 }
 
 export function clearAuthToken() {
   localStorage.removeItem("authToken")
   sessionStorage.removeItem("authToken")
+  window.dispatchEvent(new CustomEvent("authChange", { detail: { token: null } }))
 }
 
 export async function getApi(path, signal) {
