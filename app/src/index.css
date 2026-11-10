@@ -48,7 +48,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
 .icon-button, .avatar-button { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--line); background: white; border-radius: 50%; cursor: pointer; }
 .avatar-button { border: 0; background: var(--forest); color: white; font-size: 12px; font-weight: 700; }
 .section-pad { padding: 4px 22px 17px; }
-.search-bar { width: 100%; height: 48px; padding: 0 16px; display: flex; align-items: center; gap: 11px; border: 1px solid #d7dcd5; border-radius: 14px; background: rgba(255,255,255,.96); color: #7e867f; text-align: left; cursor: pointer; box-shadow: 0 5px 15px rgba(36,49,40,.06); }
+.search-bar { width: 100%; height: 48px; padding: 0 16px; display: flex; align-items: center; gap: 11px; border: 1px solid #d7dcd5; border-radius: 14px; background: rgba(255,255,255,.96); color: #7e867f; text-align: left; cursor: text; box-shadow: 0 5px 15px rgba(36,49,40,.06); }
+.search-bar input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: inherit; }
+.search-bar input::placeholder { color: #a0a6a1; }
 
 .login-screen { padding: 68px 25px 36px; display: flex; flex-direction: column; }
 .brand-mark { width: 51px; height: 51px; display: grid; place-items: center; color: white; border-radius: 17px 17px 17px 5px; background: var(--forest); }
