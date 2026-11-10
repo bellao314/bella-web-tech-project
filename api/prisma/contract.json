@@ -4,6 +4,10 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
+    "Favorite": {
+      "model": "Favorite",
+      "namespace": "public"
+    },
     "Location": {
       "model": "Location",
       "namespace": "public"
@@ -44,6 +48,90 @@
           }
         },
         "models": {
+          "Favorite": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "vendorId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              },
+              "vendor": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "vendorId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Vendor",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "userId": {
+                  "column": "userId"
+                },
+                "vendorId": {
+                  "column": "vendorId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "Favorite"
+            }
+          },
           "Location": {
             "fields": {
               "id": {
@@ -165,6 +253,21 @@
               }
             },
             "relations": {
+              "favorites": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "Favorite",
+                  "namespace": "public"
+                }
+              },
               "logs": {
                 "cardinality": "1:N",
                 "on": {
@@ -262,6 +365,21 @@
               }
             },
             "relations": {
+              "favorites": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "vendorId"
+                  ]
+                },
+                "to": {
+                  "model": "Favorite",
+                  "namespace": "public"
+                }
+              },
               "location": {
                 "cardinality": "1:1",
                 "nullable": true,
@@ -400,6 +518,104 @@
       "public": {
         "entries": {
           "table": {
+            "Favorite": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "vendorId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "Favorite_userId_idx_a489d58a"
+                  },
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Favorite"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "User"
+                  }
+                },
+                {
+                  "index": {
+                    "name": "Favorite_vendorId_idx_95bbe6fd"
+                  },
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "vendorId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Favorite"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "Vendor"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "Favorite_userId_idx_a489d58a",
+                  "prefix": "Favorite_userId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "vendorId"
+                  ],
+                  "name": "Favorite_vendorId_idx_95bbe6fd",
+                  "prefix": "Favorite_vendorId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "Location": {
               "columns": {
                 "id": {
@@ -681,7 +897,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "8b9a1a267ab5d15307fd0716355dee86c06c950f7115a8a2266f939c252e2206"
+    "storageHash": "a5eced9cd9ad8e089e743ac0500fb7b1604869cec1000452e88ca93b33130ce0"
   },
   "execution": {
     "executionHash": "76ee8948067fff39e1b787eafdf2c9319ebe5e0f5029f71536b4f58b92d7790e",

@@ -34,7 +34,7 @@ const CITY_COORDINATES = {
   "Farmington, MO": { lat: 37.7801, lng: -90.4218 },
 };
 
-function formatVendor(vendor) {
+export function formatVendor(vendor) {
   const id = Number(vendor.id);
   const base = CITY_COORDINATES[vendor.city] || { lat: 38.6270, lng: -90.1994 };
   const latOffset = (((id * 17) % 40) - 20) * 0.0012;

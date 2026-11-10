@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import Icon from "../components/Icon"
 import { vendorFrom, valueFrom } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
+import { useFavorites } from "../hooks/useFavorites"
 import { getBusinessData } from "../lib/business"
 
 export default function VendorInfoPage() {
@@ -10,6 +11,7 @@ export default function VendorInfoPage() {
   const navigate = useNavigate()
   const isMyBusiness = vendorId === "my-business"
   const { data, loading, error } = useApiResource(vendorId && !isMyBusiness ? `/vendors/${encodeURIComponent(vendorId)}` : null, null)
+  const { isFavorite, toggleFavorite } = useFavorites()
 
   const [businessData, setBusinessData] = useState(() => getBusinessData())
 
@@ -69,6 +71,8 @@ export default function VendorInfoPage() {
     return null
   }, [data, vendorId, isMyBusiness, businessData])
 
+  const isFav = vendor ? isFavorite(vendor.id) : false
+
   return (
     <main className="page scroll-page profile-page">
       <header className="page-header">
@@ -76,9 +80,27 @@ export default function VendorInfoPage() {
           <p className="eyebrow">{isMyBusiness ? "YOUR BUSINESS" : "VENDOR"}</p>
           <h2>Details</h2>
         </div>
-        <button className="icon-button" onClick={() => navigate(-1)} aria-label="Go back">
-          <Icon name="arrow" size={20} />
-        </button>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          {vendor && !isMyBusiness && (
+            <button
+              type="button"
+              className={`icon-button favorite-icon-button ${isFav ? "is-favorite" : ""}`}
+              onClick={() => toggleFavorite(vendor)}
+              aria-label={isFav ? `Remove ${vendor.name} from favorites` : `Add ${vendor.name} to favorites`}
+              title={isFav ? "Favorited" : "Add to favorites"}
+            >
+              <Icon
+                name="heart"
+                size={20}
+                fill={isFav ? "#e11d48" : "none"}
+                color={isFav ? "#e11d48" : "currentColor"}
+              />
+            </button>
+          )}
+          <button className="icon-button" onClick={() => navigate(-1)} aria-label="Go back">
+            <Icon name="arrow" size={20} />
+          </button>
+        </div>
       </header>
 
       {loading && <p className="empty-state">Loading vendor…</p>}
@@ -89,10 +111,26 @@ export default function VendorInfoPage() {
         <>
           <section className="profile-card">
             <div className="profile-avatar">{vendor.name?.slice(0, 1).toUpperCase() || "?"}</div>
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <h3>{vendor.name || "Unnamed vendor"}</h3>
               <p>{[vendor.type, vendor.city || vendor.address].filter(Boolean).join(" · ")}</p>
             </div>
+            {!isMyBusiness && (
+              <button
+                type="button"
+                className={`favorite-card-btn ${isFav ? "is-favorite" : ""}`}
+                onClick={() => toggleFavorite(vendor)}
+                aria-label={isFav ? `Remove ${vendor.name} from favorites` : `Add ${vendor.name} to favorites`}
+              >
+                <Icon
+                  name="heart"
+                  size={18}
+                  fill={isFav ? "#e11d48" : "none"}
+                  color={isFav ? "#e11d48" : "currentColor"}
+                />
+                <span>{isFav ? "Favorited" : "Favorite"}</span>
+              </button>
+            )}
           </section>
 
           <section className="profile-section">

@@ -5,6 +5,7 @@ import MapView from "../components/MapView"
 import SearchBar from "../components/SearchBar"
 import { collectionFrom, vendorFrom } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
+import { useFavorites } from "../hooks/useFavorites"
 import { getBusinessData } from "../lib/business"
 
 function isLocationInBounds(vendor, bounds) {
@@ -29,6 +30,7 @@ export default function MapPage() {
   const listRef = useRef(null)
   const navigate = useNavigate()
   const { data, loading, error } = useApiResource("/vendors", [])
+  const { isFavorite, toggleFavorite } = useFavorites()
   const [businessData, setBusinessData] = useState(() => getBusinessData())
 
   useEffect(() => {
@@ -124,78 +126,109 @@ export default function MapPage() {
 
   return (
     <main className="page map-page">
-      <header className="page-header overlay-header">
-        <div>
-          <p className="eyebrow">EXPLORE</p>
-          <h2>Nearby vendors</h2>
+      <div className="sidebar-overlay">
+        <header className="page-header overlay-header">
+          <div>
+            <p className="eyebrow">EXPLORE</p>
+            <h2>Nearby vendors</h2>
+          </div>
+          <button className="avatar-button" onClick={() => navigate("/profile")} aria-label="Open profile">
+            <Icon name="user" size={17} />
+          </button>
+        </header>
+
+        <div className="map-search">
+          <SearchBar placeholder="Search vendors or categories" />
         </div>
-        <button className="avatar-button" onClick={() => navigate("/profile")} aria-label="Open profile">
-          <Icon name="user" size={17} />
-        </button>
-      </header>
 
-      <div className="map-search">
-        <SearchBar placeholder="Search vendors or categories" />
+        <section className="vendor-sheet">
+          <div className="sheet-title">
+            <div>
+              <h3>Vendors in view</h3>
+              <p>
+                {loading
+                  ? "Loading vendors…"
+                  : `${visibleVendors.length} ${visibleVendors.length === 1 ? "place" : "places"} nearby`}
+              </p>
+            </div>
+          </div>
+
+          <div className="vendor-list" ref={listRef}>
+            {error && <p className="empty-state">Unable to load vendors.</p>}
+            {!loading && !error && visibleVendors.length === 0 && (
+              <p className="empty-state">No vendors are available in this area.</p>
+            )}
+            {visibleVendors.map((vendor, index) => {
+              const id = vendor.id ? String(vendor.id) : String(index)
+              const isSelected = selected === id
+              const isFav = isFavorite(vendor.id)
+
+              return (
+                <div
+                  key={id}
+                  id={`vendor-card-${id}`}
+                  className={isSelected ? "vendor-card selected" : "vendor-card"}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    setSelected(id)
+                    navigate(`/vendor/${encodeURIComponent(id)}`)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setSelected(id)
+                      navigate(`/vendor/${encodeURIComponent(id)}`)
+                    }
+                  }}
+                >
+                  <div className="vendor-thumb">{vendor.name?.slice(0, 1).toUpperCase() || "?"}</div>
+                  <div className="vendor-info">
+                    <div>
+                      <h4>{vendor.name}</h4>
+                      <span>★ {vendor.rating}</span>
+                    </div>
+                    {vendor.type && <p>{vendor.type}</p>}
+                    {(vendor.distance || vendor.city) && (
+                      <small>
+                        <Icon name="pin" size={13} /> {vendor.distance || vendor.city}
+                        {vendor.hours ? ` · ${vendor.hours}` : ""}
+                      </small>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className={`vendor-fav-btn ${isFav ? "is-favorite" : ""}`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleFavorite(vendor)
+                    }}
+                    aria-label={isFav ? `Remove ${vendor.name} from favorites` : `Add ${vendor.name} to favorites`}
+                    title={isFav ? "Favorited" : "Add to favorites"}
+                  >
+                    <Icon
+                      name="heart"
+                      size={18}
+                      fill={isFav ? "#e11d48" : "none"}
+                      color={isFav ? "#e11d48" : "currentColor"}
+                    />
+                  </button>
+                  <div className="chevron-icon">
+                    <Icon name="chevron" size={17} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
       </div>
-
       <MapView
         vendors={vendors}
         onBoundsChange={setBounds}
         selectedVendorId={selected}
         onSelectVendor={handleSelectVendor}
+        isFavorite={isFavorite}
+        onToggleFavorite={toggleFavorite}
       />
-
-      <section className="vendor-sheet">
-        <div className="sheet-title">
-          <div>
-            <h3>Vendors in view</h3>
-            <p>
-              {loading
-                ? "Loading vendors…"
-                : `${visibleVendors.length} ${visibleVendors.length === 1 ? "place" : "places"} nearby`}
-            </p>
-          </div>
-        </div>
-
-        <div className="vendor-list" ref={listRef}>
-          {error && <p className="empty-state">Unable to load vendors.</p>}
-          {!loading && !error && visibleVendors.length === 0 && (
-            <p className="empty-state">No vendors are available in this area.</p>
-          )}
-          {visibleVendors.map((vendor, index) => {
-            const id = vendor.id ? String(vendor.id) : String(index)
-            const isSelected = selected === id
-
-            return (
-              <button
-                key={id}
-                id={`vendor-card-${id}`}
-                className={isSelected ? "vendor-card selected" : "vendor-card"}
-                onClick={() => {
-                  setSelected(id)
-                  navigate(`/vendor/${encodeURIComponent(id)}`)
-                }}
-              >
-                <div className="vendor-thumb">{vendor.name?.slice(0, 1).toUpperCase() || "?"}</div>
-                <div className="vendor-info">
-                  <div>
-                    <h4>{vendor.name}</h4>
-                    <span>★ {vendor.rating}</span>
-                  </div>
-                  {vendor.type && <p>{vendor.type}</p>}
-                  {(vendor.distance || vendor.city) && (
-                    <small>
-                      <Icon name="pin" size={13} /> {vendor.distance || vendor.city}
-                      {vendor.hours ? ` · ${vendor.hours}` : ""}
-                    </small>
-                  )}
-                </div>
-                <Icon name="chevron" size={17} />
-              </button>
-            )
-          })}
-        </div>
-      </section>
     </main>
   )
 }

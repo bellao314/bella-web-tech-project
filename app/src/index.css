@@ -70,6 +70,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
 .signup { margin: 14px 0 0; text-align: center; color: var(--muted); font-size: 11px; }
 
 .map-page { position: relative; overflow: hidden; }
+.sidebar-overlay { position: absolute; z-index: 4; width: 25%; top: 0; left: 0; right: 0; bottom: 0; background: var(--paper); box-shadow: 0 0 30px rgba(42,52,45,.12); }
 .overlay-header { position: absolute; z-index: 5; top: 33px; left: 0; right: 0; }
 .map-search, .pin-search { position: absolute; z-index: 5; top: 118px; left: 18px; right: 18px; }
 .map-artwork { position: absolute; inset: 0; background-color: #e8eae4; background-image: linear-gradient(28deg, transparent 48%, rgba(255,255,255,.8) 49%, rgba(255,255,255,.8) 53%, transparent 54%), linear-gradient(102deg, transparent 58%, rgba(255,255,255,.8) 59%, rgba(255,255,255,.8) 63%, transparent 64%); overflow: hidden; }
@@ -93,7 +94,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
 .pin-c { top: 252px; right: 52px; background: #7b877e; }
 .pin-d { top: 177px; right: 78px; background: #7b877e; }
 .location-button { position: absolute; z-index: 5; right: 18px; top: 331px; width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: white; box-shadow: 0 4px 15px rgba(35,46,38,.14); cursor: pointer; }
-.vendor-sheet { position: absolute; z-index: 6; height: 300px; left: 0; right: 0; bottom: 66px; padding: 8px 18px 0; border-radius: 26px 26px 0 0; background: var(--paper); box-shadow: 0 -8px 30px rgba(42,52,45,.12); }
+.vendor-sheet { position: absolute; z-index: 6; height: 70%; left: 0; right: 0; bottom: 66px; padding: 8px 18px 0; border-radius: 26px 26px 0 0; background: var(--paper); box-shadow: 0 -8px 30px rgba(42,52,45,.12); }
 .sheet-title { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; padding-top: 10px;}
 .sheet-title h3, .recommend-intro h3, .profile-section h3, .pin-sheet h3 { margin: 0; font: 700 18px/1.2 'Inter'; letter-spacing: -.02em; }
 .sheet-title p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
@@ -102,6 +103,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
 .vendor-list { height: calc(100% - 58px); overflow-y: auto; scrollbar-width: none; padding-bottom: 12px; scroll-behavior: smooth; }
 .vendor-card { width: 100%; padding: 10px 0; display: flex; gap: 11px; align-items: center; border: 0; border-bottom: 1px solid var(--line); background: transparent; text-align: left; cursor: pointer; transition: all 0.2s ease; }
 .vendor-card.selected { padding-left: 10px; padding-right: 10px; border-radius: 14px; background: var(--sage); border: 1.5px solid var(--forest); }
+.vendor-fav-btn { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: white; color: #847f8b; cursor: pointer; transition: all 0.2s ease; padding: 0; }
+.vendor-fav-btn:hover { background: #fff1f2; color: #e11d48; border-color: #fecdd3; transform: scale(1.06); }
+.vendor-fav-btn.is-favorite { background: #ffe4e6; color: #e11d48; border-color: #fda4af; }
+.vendor-card .chevron-icon { flex: 0 0 auto; color: #847f8b; }
 .vendor-thumb, .mini-thumb { width: 52px; height: 52px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 12px; background: #dfe2da; color: #798079; font: 700 18px 'Inter'; }
 .vendor-info { flex: 1; min-width: 0; }
 .vendor-info > div { display: flex; justify-content: space-between; }
@@ -110,7 +115,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
 .vendor-info p { margin: 3px 0; color: var(--muted); font-size: 11px; }
 .vendor-info small { display: flex; align-items: center; color: #7c847d; font-size: 9px; }
 
-.bottom-nav { position: absolute; z-index: 20; bottom: 0; left: 0; right: 0; height: 67px; padding: 7px 44px 14px; display: flex; justify-content: space-between; background: rgba(250,250,247,.97); border-top: 1px solid var(--line); }
+.bottom-nav { position: absolute; z-index: 20; bottom: 0; left: 0; right: 0; height: 67px; padding: 7px 44px 14px; display: flex; justify-content: space-around; background: rgba(250,250,247,.97); border-top: 1px solid var(--line); }
 .nav-item { min-width: 54px; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; border: 0; background: none; color: #8d948e; font-size: 9px; cursor: pointer; }
 .nav-item.active { color: var(--forest); font-weight: 800; }
 .nav-item.active svg { stroke-width: 2.4; }
@@ -124,7 +129,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
 .card-visual.sage { background: #d8e4d8; }
 .card-visual.blue { background: #d9e1e4; }
 .card-visual > span { position: absolute; top: 15px; left: 16px; font: 700 11px 'Inter'; letter-spacing: .12em; }
-.card-visual > button { position: absolute; z-index: 2; top: 11px; right: 12px; width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(255,255,255,.85); cursor: pointer; }
+.card-visual > button { position: absolute; z-index: 2; top: 11px; right: 12px; width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(255,255,255,.85); color: #847f8b; cursor: pointer; transition: all 0.2s ease; }
+.card-visual > button:hover { background: white; color: #e11d48; transform: scale(1.06); }
+.card-visual > button.is-favorite { background: white; color: #e11d48; box-shadow: 0 2px 8px rgba(225, 29, 72, 0.25); }
 .sketch-shape { position: absolute; width: 155px; height: 110px; left: 50%; bottom: -22px; transform: translateX(-50%) rotate(-4deg); border: 2px solid rgba(37,56,45,.5); border-radius: 70px 70px 16px 16px; }
 .sketch-shape::before, .sketch-shape::after { content: ''; position: absolute; border: 2px solid rgba(37,56,45,.4); }
 .sketch-shape::before { width: 50px; height: 65px; left: 50px; top: 24px; border-radius: 50% 50% 10px 10px; }
@@ -152,11 +159,17 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
 .profile-section { margin: 0 22px 20px; padding: 16px; border: 1px solid var(--line); border-radius: 17px; background: white; }
 .section-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .section-heading button { border: 0; background: none; color: var(--forest); font-size: 10px; font-weight: 700; }
-.mini-vendor { padding: 9px 0; display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--line); }
+.mini-vendor { padding: 9px 0; display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--line); cursor: pointer; transition: background-color 0.15s ease; }
+.mini-vendor:hover h4 { color: var(--forest); }
 .mini-thumb { width: 39px; height: 39px; border-radius: 9px; font-size: 13px; }
 .mini-vendor > div:nth-child(2) { flex: 1; }
 .mini-vendor p { margin: 3px 0 0; color: var(--muted); font-size: 9px; }
-.mini-vendor > svg { color: var(--forest); fill: #e1e9df; }
+.mini-fav-btn { width: 32px; height: 32px; background: none; border: none; cursor: pointer; color: #e11d48; display: grid; place-items: center; border-radius: 50%; padding: 0; transition: background-color 0.2s ease, transform 0.2s ease; }
+.mini-fav-btn:hover { background: #ffe4e6; transform: scale(1.1); }
+.favorite-card-btn { display: flex; align-items: center; gap: 6px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); color: var(--ink); font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+.favorite-card-btn:hover { background: #fff1f2; border-color: #fecdd3; color: #e11d48; }
+.favorite-card-btn.is-favorite { background: #ffe4e6; border-color: #fda4af; color: #e11d48; }
+.favorite-icon-button.is-favorite { background: #ffe4e6; border-color: #fda4af; color: #e11d48; }
 .settings-list { margin: 0 22px 12px; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: white; }
 .settings-list button { width: 100%; padding: 12px 14px; display: flex; align-items: center; gap: 11px; border: 0; border-bottom: 1px solid var(--line); background: white; text-align: left; cursor: pointer; }
 .settings-list button:last-child { border-bottom: 0; }

@@ -9,6 +9,7 @@ model User {
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
   logs      logs[]
+  favorites Favorite[]
 }
 
 model Vendor {
@@ -20,6 +21,7 @@ model Vendor {
   phone     String?
   website   String?
   location  Location?
+  favorites Favorite[]
 }
 
 model logs {
@@ -44,4 +46,13 @@ enum LogType {
   USER_LOGIN_FAILURE
   USER_LOGIN_LOCAL
   USER_PASSWORD_CHANGE
+}
+
+model Favorite {
+  id        Int               @id @default(autoincrement())
+  userId    Int
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendorId  Int
+  vendor    Vendor            @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  createdAt TimestamptzString @default(now())
 }

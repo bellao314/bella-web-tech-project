@@ -5,6 +5,7 @@ import SettingsList from "../components/SettingsList"
 import { collectionFrom, valueFrom, vendorFrom, getAuthToken } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
 import { useAuth } from "../hooks/useAuth"
+import { useFavorites } from "../hooks/useFavorites"
 import {
   PRESET_LOCATIONS,
   PRESET_HOURS,
@@ -37,8 +38,16 @@ export default function ProfilePage() {
   const { logout, token: authToken } = useAuth()
   const token = authToken || getAuthToken()
   const { data, loading, error } = useApiResource(token ? "/user/profile" : null, null)
+  const { favorites: localFavorites, removeFavorite } = useFavorites()
   const profile = data?.profile || data?.data || data
-  const favorites = useMemo(() => collectionFrom(profile?.favorites || profile, ["favorites", "vendors"]).map(vendorFrom), [profile])
+  const apiFavorites = useMemo(() => collectionFrom(profile?.favorites || profile, ["favorites", "vendors"]).map(vendorFrom), [profile])
+
+  const favorites = useMemo(() => {
+    const map = new Map()
+    apiFavorites.forEach((v) => { if (v && v.id != null) map.set(String(v.id), v) })
+    localFavorites.forEach((v) => { if (v && v.id != null) map.set(String(v.id), v) })
+    return Array.from(map.values())
+  }, [apiFavorites, localFavorites])
 
   const name = valueFrom(profile, ["name", "displayName", "fullName"])
   const email = valueFrom(profile, ["email"])
@@ -232,14 +241,20 @@ export default function ProfilePage() {
             </div>
           </section>
 
-          {profile.stats && !isBusiness && (
+          {!isBusiness && (
             <section className="stats-row">
-              {Object.entries(profile.stats).map(([label, value]) => (
-                <div key={label}>
-                  <strong>{String(value)}</strong>
-                  <span>{label}</span>
-                </div>
-              ))}
+              <div>
+                <strong>{favorites.length}</strong>
+                <span>Favorites</span>
+              </div>
+              <div>
+                <strong>{profile?.stats?.Reviews ?? 0}</strong>
+                <span>Reviews</span>
+              </div>
+              <div>
+                <strong>{profile?.stats?.["Places Visited"] ?? 0}</strong>
+                <span>Visited</span>
+              </div>
             </section>
           )}
 
@@ -260,16 +275,47 @@ export default function ProfilePage() {
             <section className="profile-section">
               <div className="section-heading">
                 <h3>Favorite vendors</h3>
+                {favorites.length > 0 && (
+                  <span style={{ fontSize: "11px", color: "var(--muted)", fontWeight: "600" }}>
+                    {favorites.length} saved
+                  </span>
+                )}
               </div>
               {favorites.length ? (
                 favorites.map((vendor, index) => (
-                  <div className="mini-vendor" key={vendor.id || vendor.name || index}>
+                  <div
+                    className="mini-vendor"
+                    key={vendor.id || vendor.name || index}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      if (vendor.id) {
+                        navigate(`/vendor/${encodeURIComponent(vendor.id)}`)
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if ((e.key === "Enter" || e.key === " ") && vendor.id) {
+                        navigate(`/vendor/${encodeURIComponent(vendor.id)}`)
+                      }
+                    }}
+                  >
                     <div className="mini-thumb">{vendor.name?.slice(0, 1).toUpperCase() || "?"}</div>
                     <div>
                       <h4>{vendor.name || "Unnamed vendor"}</h4>
                       <p>{[vendor.type, vendor.distance || vendor.city].filter(Boolean).join(" · ")}</p>
                     </div>
-                    <Icon name="heart" size={18} />
+                    <button
+                      type="button"
+                      className="mini-fav-btn"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        removeFavorite(vendor.id)
+                      }}
+                      aria-label={`Remove ${vendor.name} from favorites`}
+                      title="Remove from favorites"
+                    >
+                      <Icon name="heart" size={18} fill="#e11d48" color="#e11d48" />
+                    </button>
                   </div>
                 ))
               ) : (

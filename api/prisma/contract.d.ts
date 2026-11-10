@@ -18,7 +18,7 @@ import type {
 } from '@internal/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'8b9a1a267ab5d15307fd0716355dee86c06c950f7115a8a2266f939c252e2206'>;
+  StorageHashBase<'a5eced9cd9ad8e089e743ac0500fb7b1604869cec1000452e88ca93b33130ce0'>;
 export type ExecutionHash =
   ExecutionHashBase<'76ee8948067fff39e1b787eafdf2c9319ebe5e0f5029f71536b4f58b92d7790e'>;
 export type ProfileHash =
@@ -234,6 +234,12 @@ type DefaultLiteralValue<CodecId extends string, Encoded> = CodecId extends keyo
 
 export type FieldOutputTypes = {
   readonly public: {
+    readonly Favorite: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly userId: CodecTypes['pg/int4@1']['output'];
+      readonly vendorId: CodecTypes['pg/int4@1']['output'];
+    };
     readonly Location: {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly latitude: CodecTypes['pg/numeric@1']['output'];
@@ -269,6 +275,12 @@ export type FieldOutputTypes = {
 };
 export type FieldInputTypes = {
   readonly public: {
+    readonly Favorite: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly userId: CodecTypes['pg/int4@1']['input'];
+      readonly vendorId: CodecTypes['pg/int4@1']['input'];
+    };
     readonly Location: {
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly latitude: CodecTypes['pg/numeric@1']['input'];
@@ -304,6 +316,12 @@ export type FieldInputTypes = {
 };
 export type StorageColumnTypes = {
   readonly public: {
+    readonly Favorite: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly userId: CodecTypes['pg/int4@1']['output'];
+      readonly vendorId: CodecTypes['pg/int4@1']['output'];
+    };
     readonly Location: {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly latitude: CodecTypes['pg/numeric@1']['output'];
@@ -339,6 +357,12 @@ export type StorageColumnTypes = {
 };
 export type StorageColumnInputTypes = {
   readonly public: {
+    readonly Favorite: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly userId: CodecTypes['pg/int4@1']['input'];
+      readonly vendorId: CodecTypes['pg/int4@1']['input'];
+    };
     readonly Location: {
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly latitude: CodecTypes['pg/numeric@1']['input'];
@@ -374,6 +398,15 @@ export type StorageColumnInputTypes = {
 };
 
 export namespace Models {
+  export type public_Favorite = {
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    id: CodecTypes['pg/int4@1']['output'];
+    userId: CodecTypes['pg/int4@1']['output'];
+    vendorId: CodecTypes['pg/int4@1']['output'];
+    user: public_User;
+    vendor: public_Vendor;
+    readonly [RelationKeys]?: 'user' | 'vendor';
+  };
   export type public_Location = {
     id: CodecTypes['pg/int4@1']['output'];
     latitude: CodecTypes['pg/numeric@1']['output'];
@@ -390,8 +423,9 @@ export namespace Models {
     password: CodecTypes['pg/text@1']['output'] | null;
     type: CodecTypes['pg/text@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    favorites: public_Favorite[];
     logs: public_logs[];
-    readonly [RelationKeys]?: 'logs';
+    readonly [RelationKeys]?: 'favorites' | 'logs';
   };
   export type public_Vendor = {
     city: CodecTypes['pg/text@1']['output'];
@@ -401,8 +435,9 @@ export namespace Models {
     phone: CodecTypes['pg/text@1']['output'] | null;
     type: CodecTypes['pg/text@1']['output'];
     website: CodecTypes['pg/text@1']['output'] | null;
+    favorites: public_Favorite[];
     location: public_Location | null;
-    readonly [RelationKeys]?: 'location';
+    readonly [RelationKeys]?: 'favorites' | 'location';
   };
   export type public_logs = {
     createdAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
@@ -417,6 +452,7 @@ export namespace Models {
 
 export declare const models: {
   public: {
+    Favorite: Models.public_Favorite;
     Location: Models.public_Location;
     User: Models.public_User;
     Vendor: Models.public_Vendor;
@@ -442,6 +478,81 @@ type ContractBase = Omit<
         readonly kind: 'postgres-schema';
         readonly entries: {
           readonly table: {
+            readonly Favorite: {
+              columns: {
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                  readonly many: false;
+                };
+                readonly userId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly vendorId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'Favorite_userId_idx_a489d58a';
+                  readonly prefix: 'Favorite_userId_idx';
+                  readonly columns: readonly ['userId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'Favorite_vendorId_idx_95bbe6fd';
+                  readonly prefix: 'Favorite_vendorId_idx';
+                  readonly columns: readonly ['vendorId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Favorite';
+                    readonly columns: readonly ['userId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'User';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Favorite';
+                    readonly columns: readonly ['vendorId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Vendor';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly Location: {
               columns: {
                 readonly id: {
@@ -684,6 +795,7 @@ type ContractBase = Omit<
   readonly target: 'postgres';
   readonly targetFamily: 'sql';
   readonly roots: {
+    readonly Favorite: { readonly namespace: 'public' & NamespaceId; readonly model: 'Favorite' };
     readonly Location: { readonly namespace: 'public' & NamespaceId; readonly model: 'Location' };
     readonly User: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
     readonly Vendor: { readonly namespace: 'public' & NamespaceId; readonly model: 'Vendor' };
@@ -693,6 +805,62 @@ type ContractBase = Omit<
     readonly namespaces: {
       readonly public: {
         readonly models: {
+          readonly Favorite: {
+            readonly fields: {
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly vendorId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly user: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['userId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly vendor: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Vendor';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['vendorId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'Favorite';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly id: { readonly column: 'id' };
+                readonly userId: { readonly column: 'userId' };
+                readonly vendorId: { readonly column: 'vendorId' };
+              };
+            };
+          };
           readonly Location: {
             readonly fields: {
               readonly id: {
@@ -824,6 +992,17 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly favorites: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Favorite';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['userId'];
+                };
+              };
               readonly logs: {
                 readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'logs' };
                 readonly cardinality: '1:N';
@@ -879,6 +1058,17 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly favorites: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Favorite';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['vendorId'];
+                };
+              };
               readonly location: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;

@@ -22,6 +22,7 @@ app.get("/health", (_req, res) => res.json({ status: "ok" }));
 app.use("/api/auth", auth);
 app.use("/api/user", user);
 app.use("/api/profile", user);
+app.use("/api/favorites", user);
 app.use("/api/vendors", vendors);
 app.use("/api/recommendations", recommendations);
 app.use("/api/maps", mapsRouter);

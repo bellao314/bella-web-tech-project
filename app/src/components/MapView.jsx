@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import Icon from './Icon';
 import {
   APIProvider,
   Map,
@@ -12,6 +13,8 @@ const VendorMarkers = ({
   vendors,
   selectedVendorId,
   onSelectVendor,
+  isFavorite,
+  onToggleFavorite,
 }) => {
   const map = useMap();
 
@@ -59,9 +62,39 @@ const VendorMarkers = ({
             position={{ lat: selectedVendor.latitude, lng: selectedVendor.longitude }}
             onCloseClick={() => onSelectVendor?.(null)}
           >
-            <div style={{ padding: '4px 6px', minWidth: '150px', color: '#1f2521', fontFamily: 'Inter, sans-serif' }}>
-              <div style={{ fontWeight: 700, fontSize: '13px', marginBottom: '2px' }}>
-                {selectedVendor.name}
+            <div style={{ padding: '6px 8px', minWidth: '160px', color: '#1f2521', fontFamily: 'Inter, sans-serif' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '2px' }}>
+                <div style={{ fontWeight: 700, fontSize: '13px', lineHeight: 1.25 }}>
+                  {selectedVendor.name}
+                </div>
+                {onToggleFavorite && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleFavorite(selectedVendor);
+                    }}
+                    aria-label={isFavorite?.(selectedVendor.id) ? `Remove ${selectedVendor.name} from favorites` : `Add ${selectedVendor.name} to favorites`}
+                    title={isFavorite?.(selectedVendor.id) ? "Favorited" : "Add to favorites"}
+                    style={{
+                      border: 0,
+                      background: 'none',
+                      cursor: 'pointer',
+                      padding: '2px',
+                      color: isFavorite?.(selectedVendor.id) ? '#e11d48' : '#847f8b',
+                      display: 'grid',
+                      placeItems: 'center',
+                      flex: '0 0 auto',
+                    }}
+                  >
+                    <Icon
+                      name="heart"
+                      size={19}
+                      fill={isFavorite?.(selectedVendor.id) ? '#e11d48' : 'none'}
+                      color={isFavorite?.(selectedVendor.id) ? '#e11d48' : 'currentColor'}
+                    />
+                  </button>
+                )}
               </div>
               <div style={{ fontSize: '11px', color: '#847f8b', marginBottom: '4px' }}>
                 {selectedVendor.type} {selectedVendor.rating ? `· ★ ${selectedVendor.rating}` : ''}
@@ -100,6 +133,8 @@ function MapView({
   onBoundsChange,
   selectedVendorId = null,
   onSelectVendor,
+  isFavorite,
+  onToggleFavorite,
   placing = false,
 }) {
   const validVendors = useMemo(() => {
@@ -111,12 +146,12 @@ function MapView({
   // Center on St. Louis coordinates or the first vendor's location
   const center = useMemo(() => {
     if (placing) {
-      return { lat: 45.523064, lng: -122.676483 }; // Portland for placing pin demo
+      return { lat: 38.614928, lng: -90.348396 };
     }
     if (validVendors.length > 0) {
       return { lat: validVendors[0].latitude, lng: validVendors[0].longitude };
     }
-    return { lat: 38.635745, lng: -90.234145 }; // St. Louis Midtown
+    return { lat: 38.635745, lng: -90.234145 };
   }, [validVendors, placing]);
 
   const handleCameraChanged = useCallback(
@@ -156,6 +191,8 @@ function MapView({
             vendors={validVendors}
             selectedVendorId={selectedVendorId}
             onSelectVendor={onSelectVendor}
+            isFavorite={isFavorite}
+            onToggleFavorite={onToggleFavorite}
           />
         )}
       </Map>

@@ -1,10 +1,11 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { db } from "../prisma/db.ts";
+import { formatVendor } from "./vendors.js";
 
 const router = Router();
 
-async function handleProfile(req, res, next) {
+export async function getUserFromRequest(req) {
 	const authorization = req.headers.authorization;
 	let token = null;
 
@@ -17,7 +18,7 @@ async function handleProfile(req, res, next) {
 	}
 
 	if (!token) {
-		return res.status(401).json({ error: "Authentication is required." });
+		return null;
 	}
 
 	try {
@@ -27,15 +28,14 @@ async function handleProfile(req, res, next) {
 		try {
 			payload = jwt.verify(token, jwtSecret);
 		} catch (verifyErr) {
-			// If verification failed and a custom secret was used, attempt fallback dev secret
 			if (jwtSecret !== "default_jwt_secret_dev_mode") {
 				try {
 					payload = jwt.verify(token, "default_jwt_secret_dev_mode");
 				} catch {
-					throw verifyErr;
+					return null;
 				}
 			} else {
-				throw verifyErr;
+				return null;
 			}
 		}
 
@@ -50,11 +50,54 @@ async function handleProfile(req, res, next) {
 			user = await db.orm.public.User.where({ email: String(payload.email) }).first();
 		}
 
-		if (!user) {
-			return res.status(404).json({ error: "User not found." });
+		if (user) {
+			user.accountType = user.type || payload?.type || payload?.accountType || "customer";
 		}
 
-		const userType = user.type || payload?.type || payload?.accountType || "customer";
+		return user;
+	} catch {
+		return null;
+	}
+}
+
+export async function getUserFavorites(userId) {
+	try {
+		const rawFavs = await db.orm.public.Favorite
+			.where({ userId: Number(userId) })
+			.all();
+
+		if (!rawFavs || !rawFavs.length) return [];
+
+		const vendors = await Promise.all(
+			rawFavs.map(async (fav) => {
+				try {
+					const rawVendor = await db.orm.public.Vendor
+						.where({ id: Number(fav.vendorId) })
+						.include("location")
+						.first();
+					return rawVendor ? formatVendor(rawVendor) : null;
+				} catch {
+					return null;
+				}
+			})
+		);
+
+		return vendors.filter(Boolean);
+	} catch (error) {
+		console.error("Error fetching favorites:", error);
+		return [];
+	}
+}
+
+async function handleProfile(req, res, next) {
+	try {
+		const user = await getUserFromRequest(req);
+		if (!user) {
+			return res.status(401).json({ error: "Authentication is required." });
+		}
+
+		const favorites = await getUserFavorites(user.id);
+		const userType = user.type || user.accountType || "customer";
 
 		return res.json({
 			profile: {
@@ -65,17 +108,164 @@ async function handleProfile(req, res, next) {
 				accountType: userType,
 				createdAt: user.createdAt,
 				updatedAt: user.updatedAt,
+				favorites,
+				stats: {
+					Favorites: favorites.length,
+					Reviews: 0,
+					CheckIns: 0,
+				},
 			},
 		});
 	} catch (error) {
-		if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
-			return res.status(401).json({ error: "Invalid or expired authentication token." });
+		next(error);
+	}
+}
+
+async function handleGetFavorites(req, res, next) {
+	try {
+		const user = await getUserFromRequest(req);
+		if (!user) {
+			return res.status(401).json({ error: "Authentication is required." });
 		}
+
+		const favorites = await getUserFavorites(user.id);
+		return res.json({ favorites });
+	} catch (error) {
+		next(error);
+	}
+}
+
+async function handleAddFavorite(req, res, next) {
+	try {
+		const user = await getUserFromRequest(req);
+		if (!user) {
+			return res.status(401).json({ error: "Authentication is required." });
+		}
+
+		const rawVendorId = req.body?.vendorId ?? req.params?.vendorId;
+		const vendorId = Number(rawVendorId);
+
+		if (!Number.isFinite(vendorId)) {
+			// For non-numeric custom IDs (e.g. "my-business"), return success
+			return res.json({
+				success: true,
+				isFavorite: true,
+				vendorId: rawVendorId,
+				favorites: await getUserFavorites(user.id),
+			});
+		}
+
+		const existing = await db.orm.public.Favorite
+			.where({ userId: user.id, vendorId })
+			.first();
+
+		if (!existing) {
+			await db.orm.public.Favorite.create({
+				userId: user.id,
+				vendorId,
+				createdAt: new Date().toISOString(),
+			});
+		}
+
+		const favorites = await getUserFavorites(user.id);
+		return res.status(200).json({
+			success: true,
+			isFavorite: true,
+			favorites,
+		});
+	} catch (error) {
+		next(error);
+	}
+}
+
+async function handleRemoveFavorite(req, res, next) {
+	try {
+		const user = await getUserFromRequest(req);
+		if (!user) {
+			return res.status(401).json({ error: "Authentication is required." });
+		}
+
+		const rawVendorId = req.params?.vendorId ?? req.body?.vendorId;
+		const vendorId = Number(rawVendorId);
+
+		if (!Number.isFinite(vendorId)) {
+			return res.json({
+				success: true,
+				isFavorite: false,
+				vendorId: rawVendorId,
+				favorites: await getUserFavorites(user.id),
+			});
+		}
+
+		await db.orm.public.Favorite
+			.where({ userId: user.id, vendorId })
+			.delete();
+
+		const favorites = await getUserFavorites(user.id);
+		return res.status(200).json({
+			success: true,
+			isFavorite: false,
+			favorites,
+		});
+	} catch (error) {
+		next(error);
+	}
+}
+
+async function handleToggleFavorite(req, res, next) {
+	try {
+		const user = await getUserFromRequest(req);
+		if (!user) {
+			return res.status(401).json({ error: "Authentication is required." });
+		}
+
+		const rawVendorId = req.body?.vendorId ?? req.params?.vendorId;
+		const vendorId = Number(rawVendorId);
+
+		if (!Number.isFinite(vendorId)) {
+			return res.json({
+				success: true,
+				isFavorite: true,
+				vendorId: rawVendorId,
+				favorites: await getUserFavorites(user.id),
+			});
+		}
+
+		const existing = await db.orm.public.Favorite
+			.where({ userId: user.id, vendorId })
+			.first();
+
+		let isFavorite = false;
+		if (existing) {
+			await db.orm.public.Favorite
+				.where({ userId: user.id, vendorId })
+				.delete();
+			isFavorite = false;
+		} else {
+			await db.orm.public.Favorite.create({
+				userId: user.id,
+				vendorId,
+				createdAt: new Date().toISOString(),
+			});
+			isFavorite = true;
+		}
+
+		const favorites = await getUserFavorites(user.id);
+		return res.status(200).json({
+			success: true,
+			isFavorite,
+			favorites,
+		});
+	} catch (error) {
 		next(error);
 	}
 }
 
 router.get("/profile", handleProfile);
+router.get("/favorites", handleGetFavorites);
+router.post("/favorites", handleAddFavorite);
+router.post("/favorites/toggle", handleToggleFavorite);
+router.delete("/favorites/:vendorId", handleRemoveFavorite);
 router.get("/", handleProfile);
 
 export default router;
