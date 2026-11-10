@@ -46,9 +46,9 @@ const VendorMarkers = ({
             onClick={() => handleMarkerClick(vendor)}
           >
             <Pin
-              background={isSelected ? '#9c88c0' : '#422e65'}
+              background={isSelected ? '#9c88c0' : 'var(--forest)'}
               glyphColor="#ffffff"
-              borderColor={isSelected ? '#422e65' : '#2a1d42'}
+              borderColor={isSelected ? 'var(--lime)' : 'var(--ink)'}
               scale={isSelected ? 1.2 : 1.0}
             />
           </AdvancedMarker>
@@ -96,11 +96,11 @@ const VendorMarkers = ({
                   </button>
                 )}
               </div>
-              <div style={{ fontSize: '11px', color: '#847f8b', marginBottom: '4px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>
                 {selectedVendor.type} {selectedVendor.rating ? `· ★ ${selectedVendor.rating}` : ''}
               </div>
               {selectedVendor.city && (
-                <div style={{ fontSize: '10px', color: '#422e65', fontWeight: 600, marginBottom: '8px' }}>
+                <div style={{ fontSize: '10px', color: 'var(--forest)', fontWeight: 600, marginBottom: '8px' }}>
                   {selectedVendor.city}
                 </div>
               )}
@@ -110,7 +110,7 @@ const VendorMarkers = ({
                 style={{
                   width: '100%',
                   padding: '6px 10px',
-                  background: '#422e65',
+                  background: 'var(--forest)',
                   color: '#ffffff',
                   border: 0,
                   borderRadius: '7px',

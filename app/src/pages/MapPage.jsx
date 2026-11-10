@@ -127,18 +127,20 @@ export default function MapPage() {
   return (
     <main className="page map-page">
       <div className="sidebar-overlay">
-        <header className="page-header overlay-header">
-          <div>
-            <p className="eyebrow">EXPLORE</p>
-            <h2>Nearby vendors</h2>
-          </div>
-          <button className="avatar-button" onClick={() => navigate("/profile")} aria-label="Open profile">
-            <Icon name="user" size={17} />
-          </button>
-        </header>
+        <div className="map-top-bar">
+          <header className="page-header overlay-header">
+            <div>
+              <p className="eyebrow">EXPLORE</p>
+              <h2>Nearby vendors</h2>
+            </div>
+            <button className="avatar-button" onClick={() => navigate("/profile")} aria-label="Open profile">
+              <Icon name="user" size={17} />
+            </button>
+          </header>
 
-        <div className="map-search">
-          <SearchBar placeholder="Search vendors or categories" />
+          <div className="map-search">
+            <SearchBar placeholder="Search vendors or categories" />
+          </div>
         </div>
 
         <section className="vendor-sheet">

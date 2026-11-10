@@ -24,9 +24,9 @@ export default function SearchBar({ placeholder = "Search", value, onChange, onC
   }
 
   return (
-    <button className="search-bar" type="button" onClick={onClick}>
+    <>
+      <input className="search-bar" type="text" placeholder={placeholder}/>
       <Icon name="search" size={19} />
-      <span>{placeholder}</span>
-    </button>
+    </>
   )
 }
