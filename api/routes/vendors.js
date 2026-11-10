@@ -47,7 +47,6 @@ export function formatVendor(vendor) {
     ? Number(vendor.location.longitude)
     : Number((base.lng + lngOffset).toFixed(6));
 
-  const rating = (4.4 + ((id * 3) % 6) / 10).toFixed(1);
   const distance = `${(0.2 + ((id * 7) % 35) / 10).toFixed(1)} mi`;
 
   return {
@@ -66,7 +65,6 @@ export function formatVendor(vendor) {
       latitude: lat,
       longitude: lng,
     },
-    rating,
     distance,
     hours: "10:00 AM – 6:00 PM",
   };

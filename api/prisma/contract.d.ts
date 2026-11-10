@@ -18,7 +18,7 @@ import type {
 } from '@internal/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'a5eced9cd9ad8e089e743ac0500fb7b1604869cec1000452e88ca93b33130ce0'>;
+  StorageHashBase<'5b4c7875fa794a91fba5a4c504c8bd36e1e9a6694c59c16ddc62181ab8adf2e6'>;
 export type ExecutionHash =
   ExecutionHashBase<'76ee8948067fff39e1b787eafdf2c9319ebe5e0f5029f71536b4f58b92d7790e'>;
 export type ProfileHash =
@@ -254,9 +254,12 @@ export type FieldOutputTypes = {
       readonly userId: CodecTypes['pg/int4@1']['output'] | null;
     };
     readonly User: {
+      readonly city: CodecTypes['pg/text@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly email: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly latitude: CodecTypes['pg/numeric@1']['output'] | null;
+      readonly longitude: CodecTypes['pg/numeric@1']['output'] | null;
       readonly name: CodecTypes['pg/text@1']['output'] | null;
       readonly password: CodecTypes['pg/text@1']['output'] | null;
       readonly type: CodecTypes['pg/text@1']['output'];
@@ -295,9 +298,12 @@ export type FieldInputTypes = {
       readonly userId: CodecTypes['pg/int4@1']['input'] | null;
     };
     readonly User: {
+      readonly city: CodecTypes['pg/text@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly email: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly latitude: CodecTypes['pg/numeric@1']['input'] | null;
+      readonly longitude: CodecTypes['pg/numeric@1']['input'] | null;
       readonly name: CodecTypes['pg/text@1']['input'] | null;
       readonly password: CodecTypes['pg/text@1']['input'] | null;
       readonly type: CodecTypes['pg/text@1']['input'];
@@ -336,9 +342,12 @@ export type StorageColumnTypes = {
       readonly userId: CodecTypes['pg/int4@1']['output'] | null;
     };
     readonly User: {
+      readonly city: CodecTypes['pg/text@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly email: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly latitude: CodecTypes['pg/numeric@1']['output'] | null;
+      readonly longitude: CodecTypes['pg/numeric@1']['output'] | null;
       readonly name: CodecTypes['pg/text@1']['output'] | null;
       readonly password: CodecTypes['pg/text@1']['output'] | null;
       readonly type: CodecTypes['pg/text@1']['output'];
@@ -377,9 +386,12 @@ export type StorageColumnInputTypes = {
       readonly userId: CodecTypes['pg/int4@1']['input'] | null;
     };
     readonly User: {
+      readonly city: CodecTypes['pg/text@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly email: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly latitude: CodecTypes['pg/numeric@1']['input'] | null;
+      readonly longitude: CodecTypes['pg/numeric@1']['input'] | null;
       readonly name: CodecTypes['pg/text@1']['input'] | null;
       readonly password: CodecTypes['pg/text@1']['input'] | null;
       readonly type: CodecTypes['pg/text@1']['input'];
@@ -416,9 +428,12 @@ export namespace Models {
     readonly [RelationKeys]?: 'vendor';
   };
   export type public_User = {
+    city: CodecTypes['pg/text@1']['output'] | null;
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     email: CodecTypes['pg/text@1']['output'];
     id: CodecTypes['pg/int4@1']['output'];
+    latitude: CodecTypes['pg/numeric@1']['output'] | null;
+    longitude: CodecTypes['pg/numeric@1']['output'] | null;
     name: CodecTypes['pg/text@1']['output'] | null;
     password: CodecTypes['pg/text@1']['output'] | null;
     type: CodecTypes['pg/text@1']['output'];
@@ -667,6 +682,12 @@ type ContractBase = Omit<
             };
             readonly User: {
               columns: {
+                readonly city: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
                 readonly createdAt: {
                   readonly dataType: 'pg/timestamptz';
                   readonly codecId: 'pg/timestamptz-string@1';
@@ -688,6 +709,18 @@ type ContractBase = Omit<
                     readonly kind: 'function';
                     readonly expression: 'autoincrement()';
                   };
+                  readonly many: false;
+                };
+                readonly latitude: {
+                  readonly dataType: 'pg/numeric';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly longitude: {
+                  readonly dataType: 'pg/numeric';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly nullable: true;
                   readonly many: false;
                 };
                 readonly name: {
@@ -956,6 +989,10 @@ type ContractBase = Omit<
           };
           readonly User: {
             readonly fields: {
+              readonly city: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly createdAt: {
                 readonly nullable: false;
                 readonly type: {
@@ -970,6 +1007,14 @@ type ContractBase = Omit<
               readonly id: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly latitude: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/numeric@1' };
+              };
+              readonly longitude: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/numeric@1' };
               };
               readonly name: {
                 readonly nullable: true;
@@ -1016,9 +1061,12 @@ type ContractBase = Omit<
               readonly table: 'User';
               readonly namespaceId: 'public';
               readonly fields: {
+                readonly city: { readonly column: 'city' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly email: { readonly column: 'email' };
                 readonly id: { readonly column: 'id' };
+                readonly latitude: { readonly column: 'latitude' };
+                readonly longitude: { readonly column: 'longitude' };
                 readonly name: { readonly column: 'name' };
                 readonly password: { readonly column: 'password' };
                 readonly type: { readonly column: 'type' };

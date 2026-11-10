@@ -33,7 +33,6 @@ export default function VendorInfoPage() {
         hours: businessData.hours,
         latitude: businessData.latitude,
         longitude: businessData.longitude,
-        rating: "5.0 (Live)",
       })
     }
 
@@ -64,7 +63,6 @@ export default function VendorInfoPage() {
         hours: businessData.hours,
         latitude: businessData.latitude,
         longitude: businessData.longitude,
-        rating: "5.0 (Live)",
       })
     }
 

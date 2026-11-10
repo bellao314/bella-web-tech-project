@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import Icon from "../components/Icon"
 import SettingsList from "../components/SettingsList"
-import { collectionFrom, valueFrom, vendorFrom, getAuthToken } from "../lib/api"
+import { collectionFrom, valueFrom, vendorFrom, getAuthToken, putApi, getApi } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
 import { useAuth } from "../hooks/useAuth"
 import { useFavorites } from "../hooks/useFavorites"
@@ -56,6 +56,98 @@ export default function ProfilePage() {
   const accountType = (apiAccountType || localStorage.getItem("userAccountType") || "customer").toLowerCase()
   const isBusiness = accountType === "business"
 
+  // Customer Location (City) state
+  const profileCity = valueFrom(profile, ["city", "userCity"])
+  const [cityInput, setCityInput] = useState(() => localStorage.getItem("userCity") || "")
+  const [currentCity, setCurrentCity] = useState(() => localStorage.getItem("userCity") || "")
+  const [citySaveMessage, setCitySaveMessage] = useState("")
+  const [citySaveError, setCitySaveError] = useState("")
+  const [isSavingCity, setIsSavingCity] = useState(false)
+
+  useEffect(() => {
+    if (profile) {
+      const city = profile.city ?? localStorage.getItem("userCity") ?? ""
+      setCurrentCity(city)
+      setCityInput(city)
+      if (city) {
+        localStorage.setItem("userCity", city)
+        if (profile.latitude != null && profile.longitude != null) {
+          localStorage.setItem(
+            "userCityCoords",
+            JSON.stringify({ lat: Number(profile.latitude), lng: Number(profile.longitude) })
+          )
+        }
+      } else if (profile.city === null) {
+        localStorage.removeItem("userCity")
+        localStorage.removeItem("userCityCoords")
+      }
+    }
+  }, [profile])
+
+  const handleSaveCustomerLocation = async (e) => {
+    e.preventDefault()
+    setIsSavingCity(true)
+    setCitySaveError("")
+    setCitySaveMessage("")
+
+    const cleanCity = cityInput.trim()
+
+    try {
+      let lat = null
+      let lng = null
+
+      if (cleanCity) {
+        try {
+          const geoRes = await getApi(`/maps/geocode?address=${encodeURIComponent(cleanCity)}`)
+          const loc = geoRes?.results?.[0]?.geometry?.location
+          if (loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
+            lat = loc.lat
+            lng = loc.lng
+          }
+        } catch {
+          // Backend will attempt geocoding as well
+        }
+      }
+
+      if (token) {
+        const res = await putApi("/user/profile", {
+          city: cleanCity || null,
+          ...(lat != null && lng != null ? { latitude: lat, longitude: lng } : {}),
+        })
+        if (res?.profile?.latitude != null && res?.profile?.longitude != null) {
+          lat = Number(res.profile.latitude)
+          lng = Number(res.profile.longitude)
+        }
+      }
+
+      if (cleanCity) {
+        setCurrentCity(cleanCity)
+        localStorage.setItem("userCity", cleanCity)
+        if (lat != null && lng != null) {
+          localStorage.setItem("userCityCoords", JSON.stringify({ lat, lng }))
+        }
+        setCitySaveMessage(`Location updated to "${cleanCity}". The map view will now center here.`)
+      } else {
+        setCurrentCity("")
+        localStorage.removeItem("userCity")
+        localStorage.removeItem("userCityCoords")
+        setCitySaveMessage("Location cleared. The map view will use the default center.")
+      }
+
+      window.dispatchEvent(
+        new CustomEvent("userLocationUpdated", {
+          detail: { city: cleanCity || null, latitude: lat, longitude: lng },
+        })
+      )
+
+      setTimeout(() => setCitySaveMessage(""), 5000)
+    } catch (err) {
+      setCitySaveError(err.message || "Failed to update location. Please try again.")
+    } finally {
+      setIsSavingCity(false)
+    }
+  }
+
   // Business Location & Hours state
   const [businessData, setBusinessData] = useState(() => getBusinessData(name || "My Business"))
   const [selectedLocPreset, setSelectedLocPreset] = useState(() => {
@@ -107,29 +199,13 @@ export default function ProfilePage() {
 
   const handleSaveBusinessLocationHours = (e) => {
     e.preventDefault()
-    let chosenLocation = null
 
-    if (selectedLocPreset !== "custom") {
-      const preset = PRESET_LOCATIONS.find((loc) => loc.name === selectedLocPreset)
-      if (preset) {
-        chosenLocation = {
-          locationName: preset.name,
-          address: preset.address,
-          city: preset.city,
-          latitude: preset.latitude,
-          longitude: preset.longitude,
-        }
-      }
-    }
-
-    if (!chosenLocation) {
-      chosenLocation = {
-        locationName: customLocAddress.split(",")[0]?.trim() || "Primary Location",
-        address: customLocAddress.trim() || "Current Location",
-        city: customLocAddress.split(",").slice(1).join(",").trim() || "Local Area",
-        latitude: businessData.latitude || 38.6270,
-        longitude: businessData.longitude || -90.1994,
-      }
+    let chosenLocation = {
+      locationName: customLocAddress.split(",")[0]?.trim() || "Primary Location",
+      address: customLocAddress.trim() || "Current Location",
+      city: customLocAddress.split(",").slice(1).join(",").trim() || "Local Area",
+      latitude: businessData.latitude || 38.6270,
+      longitude: businessData.longitude || -90.1994,
     }
 
     const chosenHours = selectedHoursPreset === "custom"
@@ -157,7 +233,8 @@ export default function ProfilePage() {
     [isBusiness ? "Business name" : "Full name", name || "Not set"],
     ["Email address", email],
     ["Member since", formatDate(createdAt)],
-  ].filter(([, value]) => Boolean(value))
+    !isBusiness ? ["Location (City)", currentCity || "Not set"] : null,
+  ].filter(Boolean)
 
   return (
     <main className="page scroll-page profile-page">
@@ -166,9 +243,6 @@ export default function ProfilePage() {
           <p className="eyebrow">{isBusiness ? "BUSINESS HUB" : "YOUR SPACE"}</p>
           <h2>{isBusiness ? "Business Account" : "Profile"}</h2>
         </div>
-        <button className="icon-button" aria-label="Profile settings">
-          <Icon name="settings" size={20} />
-        </button>
       </header>
 
       {!token && (
@@ -252,6 +326,129 @@ export default function ProfilePage() {
               </div>
             ))}
           </section>
+
+          {/* CUSTOMER VIEW: Location (City) */}
+          {!isBusiness && (
+            <section className="profile-section">
+              <div className="section-heading">
+                <h3>Your location</h3>
+                {currentCity && (
+                  <span style={{ fontSize: "11px", color: "var(--forest)", fontWeight: "600" }}>
+                    {currentCity}
+                  </span>
+                )}
+              </div>
+              <p style={{ margin: "0 0 12px", color: "var(--muted)", fontSize: "12px", lineHeight: 1.4 }}>
+                Set your city to determine the center coordinates for the map view. For privacy reasons, enter your city only (not your street address). This field is optional and can be edited at any time.
+              </p>
+              <form onSubmit={handleSaveCustomerLocation} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <label style={{ display: "block" }}>
+                  <span style={{ display: "block", marginBottom: "6px", fontSize: "12px", fontWeight: 700 }}>
+                    City
+                  </span>
+                  <div className="input-shell">
+                    <Icon name="pin" size={18} />
+                    <input
+                      type="text"
+                      placeholder="e.g. St. Louis, MO"
+                      value={cityInput}
+                      onChange={(e) => setCityInput(e.target.value)}
+                      aria-label="City location"
+                    />
+                    {cityInput && (
+                      <button
+                        type="button"
+                        onClick={() => setCityInput("")}
+                        style={{
+                          border: 0,
+                          background: "none",
+                          color: "var(--muted)",
+                          cursor: "pointer",
+                          padding: "4px",
+                          fontSize: "14px",
+                          lineHeight: 1,
+                        }}
+                        title="Clear city input"
+                        aria-label="Clear city input"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </label>
+
+                {citySaveMessage && (
+                  <div
+                    style={{
+                      padding: "9px 12px",
+                      borderRadius: "10px",
+                      background: "#e4efdc",
+                      color: "#2b5138",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <Icon name="check" size={16} /> {citySaveMessage}
+                  </div>
+                )}
+
+                {citySaveError && (
+                  <div
+                    style={{
+                      padding: "9px 12px",
+                      borderRadius: "10px",
+                      background: "#ffe3e3",
+                      color: "#c92a2a",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {citySaveError}
+                  </div>
+                )}
+
+                <div style={{ display: "flex", gap: "9px", marginTop: "2px" }}>
+                  <button
+                    type="submit"
+                    className="primary-button"
+                    disabled={isSavingCity}
+                    style={{ flex: 1, minHeight: "44px", fontSize: "12px" }}
+                  >
+                    {isSavingCity
+                      ? "Saving..."
+                      : (cityInput.trim() ? "Save Location" : (currentCity ? "Clear Location" : "Save Location"))}{" "}
+                    <Icon name="check" size={16} />
+                  </button>
+                  {currentCity && (
+                    <button
+                      type="button"
+                      onClick={() => navigate("/")}
+                      style={{
+                        padding: "0 14px",
+                        border: "1px solid var(--line)",
+                        borderRadius: "13px",
+                        background: "white",
+                        color: "var(--forest)",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "5px",
+                        minHeight: "44px",
+                      }}
+                      title="View on map"
+                    >
+                      <Icon name="map" size={16} /> Map
+                    </button>
+                  )}
+                </div>
+              </form>
+            </section>
+          )}
 
           {/* CUSTOMER VIEW: Favorite Vendors */}
           {!isBusiness && (

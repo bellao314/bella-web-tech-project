@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom"
 import Icon from "../components/Icon"
 import MapView from "../components/MapView"
 import SearchBar from "../components/SearchBar"
-import { collectionFrom, vendorFrom } from "../lib/api"
+import { collectionFrom, vendorFrom, getApi } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
 import { useFavorites } from "../hooks/useFavorites"
+import { useAuth } from "../hooks/useAuth"
 import { getBusinessData } from "../lib/business"
 import { matchesVendorSearch } from "../lib/search"
 
@@ -33,6 +34,73 @@ export default function MapPage() {
   const navigate = useNavigate()
   const { data, loading, error } = useApiResource("/vendors", [])
   const { isFavorite, toggleFavorite } = useFavorites()
+  const { token } = useAuth()
+  const { data: profileData } = useApiResource(token ? "/user/profile" : null, null)
+  const profile = profileData?.profile || profileData?.data || profileData
+
+  const [userLocation, setUserLocation] = useState(() => {
+    const city = localStorage.getItem("userCity") || null
+    let coords = null
+    try {
+      const stored = localStorage.getItem("userCityCoords")
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (Number.isFinite(parsed?.lat) && Number.isFinite(parsed?.lng)) {
+          coords = { lat: Number(parsed.lat), lng: Number(parsed.lng) }
+        }
+      }
+    } catch {}
+    return { city, coords }
+  })
+
+  useEffect(() => {
+    const handleLocationUpdate = (e) => {
+      const detail = e?.detail
+      if (!detail) {
+        setUserLocation({ city: null, coords: null })
+        return
+      }
+      const coords =
+        Number.isFinite(detail.latitude) && Number.isFinite(detail.longitude)
+          ? { lat: Number(detail.latitude), lng: Number(detail.longitude) }
+          : null
+      setUserLocation({ city: detail.city || null, coords })
+    }
+
+    window.addEventListener("userLocationUpdated", handleLocationUpdate)
+    return () => window.removeEventListener("userLocationUpdated", handleLocationUpdate)
+  }, [])
+
+  useEffect(() => {
+    if (profile?.city) {
+      let coords = null
+      if (profile.latitude != null && profile.longitude != null) {
+        coords = { lat: Number(profile.latitude), lng: Number(profile.longitude) }
+      }
+      setUserLocation((prev) => {
+        if (prev.city === profile.city && prev.coords?.lat === coords?.lat && prev.coords?.lng === coords?.lng) {
+          return prev
+        }
+        return { city: profile.city, coords: coords || prev.coords }
+      })
+
+      if (!coords) {
+        getApi(`/maps/geocode?address=${encodeURIComponent(profile.city)}`)
+          .then((geo) => {
+            const loc = geo?.results?.[0]?.geometry?.location
+            if (loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
+              const newCoords = { lat: Number(loc.lat), lng: Number(loc.lng) }
+              localStorage.setItem("userCityCoords", JSON.stringify(newCoords))
+              setUserLocation({ city: profile.city, coords: newCoords })
+            }
+          })
+          .catch(() => {})
+      }
+    } else if (profile && profile.city === null) {
+      setUserLocation({ city: null, coords: null })
+    }
+  }, [profile])
+
   const [businessData, setBusinessData] = useState(() => getBusinessData())
 
   useEffect(() => {
@@ -54,7 +122,6 @@ export default function MapPage() {
       hours: businessData.hours,
       latitude: Number(businessData.latitude),
       longitude: Number(businessData.longitude),
-      rating: "5.0",
       distance: "0.1 mi",
     })
 
@@ -208,7 +275,6 @@ export default function MapPage() {
                   <div className="vendor-info">
                     <div>
                       <h4>{vendor.name}</h4>
-                      <span>★ {vendor.rating}</span>
                     </div>
                     {vendor.type && <p>{vendor.type}</p>}
                     {(vendor.distance || vendor.city) && (
@@ -251,6 +317,8 @@ export default function MapPage() {
         onSelectVendor={handleSelectVendor}
         isFavorite={isFavorite}
         onToggleFavorite={toggleFavorite}
+        userCoordinates={userLocation.coords}
+        userCity={userLocation.city}
       />
     </main>
   )

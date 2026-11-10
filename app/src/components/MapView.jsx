@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useMemo, useEffect, useRef } from 'react';
 import Icon from './Icon';
 import {
   APIProvider,
@@ -104,7 +104,7 @@ const VendorMarkers = ({
                 )}
               </div>
               <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>
-                {selectedVendor.type} {selectedVendor.rating ? `· ★ ${selectedVendor.rating}` : ''}
+                {selectedVendor.type}
               </div>
               {selectedVendor.city && (
                 <div style={{ fontSize: '10px', color: 'var(--forest)', fontWeight: 600, marginBottom: '8px' }}>
@@ -135,6 +135,25 @@ const VendorMarkers = ({
   );
 };
 
+const MapCenterController = ({ center }) => {
+  const map = useMap();
+  const prevCenterRef = useRef(null);
+
+  useEffect(() => {
+    if (!map || !center) return;
+    if (
+      !prevCenterRef.current ||
+      prevCenterRef.current.lat !== center.lat ||
+      prevCenterRef.current.lng !== center.lng
+    ) {
+      prevCenterRef.current = center;
+      map.setCenter(center);
+    }
+  }, [map, center]);
+
+  return null;
+};
+
 function MapView({
   vendors = [],
   onBoundsChange,
@@ -143,6 +162,8 @@ function MapView({
   isFavorite,
   onToggleFavorite,
   placing = false,
+  userCoordinates = null,
+  userCity = null,
 }) {
   const validVendors = useMemo(() => {
     return vendors.filter(
@@ -150,16 +171,36 @@ function MapView({
     );
   }, [vendors]);
 
-  // Center on St. Louis coordinates or the first vendor's location
+  // Determine user coordinates: check prop first, then fallback to localStorage
+  const activeUserCoords = useMemo(() => {
+    if (userCoordinates && Number.isFinite(userCoordinates.lat) && Number.isFinite(userCoordinates.lng)) {
+      return { lat: Number(userCoordinates.lat), lng: Number(userCoordinates.lng) };
+    }
+    try {
+      const stored = localStorage.getItem("userCityCoords");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Number.isFinite(parsed?.lat) && Number.isFinite(parsed?.lng)) {
+          return { lat: Number(parsed.lat), lng: Number(parsed.lng) };
+        }
+      }
+    } catch {}
+    return null;
+  }, [userCoordinates]);
+
+  // Center on customer's city coordinates if set, or placing coords, or first vendor, or default St. Louis
   const center = useMemo(() => {
     if (placing) {
       return { lat: 38.614928, lng: -90.348396 };
+    }
+    if (activeUserCoords) {
+      return activeUserCoords;
     }
     if (validVendors.length > 0) {
       return { lat: validVendors[0].latitude, lng: validVendors[0].longitude };
     }
     return { lat: 38.635745, lng: -90.234145 };
-  }, [validVendors, placing]);
+  }, [validVendors, placing, activeUserCoords]);
 
   const handleCameraChanged = useCallback(
     (ev) => {
@@ -189,6 +230,7 @@ function MapView({
         gestureHandling="greedy"
         disableDefaultUI={false}
       >
+        <MapCenterController center={center} />
         {placing ? (
           <AdvancedMarker position={center} draggable={true}>
             <Pin background="#422e65" glyphColor="#ffffff" borderColor="#2a1d42" />

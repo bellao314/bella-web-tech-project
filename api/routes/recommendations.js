@@ -15,7 +15,6 @@ router.get("/", async (req, res, next) => {
         name: vendor.name,
         type: vendor.type,
         city: vendor.city,
-        rating: (4.6 + ((id * 2) % 4) / 10).toFixed(1),
         distance: `${(0.4 + ((id * 5) % 25) / 10).toFixed(1)} mi`,
         latitude: lat,
         longitude: lng,

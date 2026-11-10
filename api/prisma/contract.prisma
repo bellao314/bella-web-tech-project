@@ -6,6 +6,9 @@ model User {
   password  String?
   name      String?
   type      String
+  city      String?
+  latitude  Decimal?
+  longitude Decimal?
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
   logs      logs[]

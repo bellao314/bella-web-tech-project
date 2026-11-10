@@ -48,6 +48,7 @@ async function handleLogin(req, res, next) {
         name: user.name,
         type: userType,
         accountType: userType,
+        city: user.city || null,
       },
       jwtSecret,
       { expiresIn: "24h" }
@@ -61,6 +62,9 @@ async function handleLogin(req, res, next) {
         name: user.name,
         type: userType,
         accountType: userType,
+        city: user.city || null,
+        latitude: user.latitude != null ? Number(user.latitude) : null,
+        longitude: user.longitude != null ? Number(user.longitude) : null,
       },
     });
   } catch (error) {
@@ -121,6 +125,7 @@ router.post("/register", async (req, res, next) => {
         name: user.name,
         type: user.type,
         accountType: user.type,
+        city: user.city || null,
       },
       jwtSecret,
       { expiresIn: "24h" }
@@ -134,6 +139,9 @@ router.post("/register", async (req, res, next) => {
         name: user.name,
         type: user.type,
         accountType: user.type,
+        city: user.city || null,
+        latitude: user.latitude != null ? Number(user.latitude) : null,
+        longitude: user.longitude != null ? Number(user.longitude) : null,
       },
     });
   } catch (error) {

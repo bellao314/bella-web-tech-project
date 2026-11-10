@@ -33,7 +33,6 @@ export function vendorFrom(record) {
     type: valueFrom(record, ["type", "category", "vendorType"]),
     city: valueFrom(record, ["city", "locality", "address"]),
     distance: valueFrom(record, ["distance", "distanceText"]),
-    rating: valueFrom(record, ["rating", "averageRating"]),
     latitude: Number.isFinite(latitude) ? latitude : null,
     longitude: Number.isFinite(longitude) ? longitude : null,
   }
@@ -128,6 +127,58 @@ export async function postApi(path, body, signal) {
   const token = getAuthToken()
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: JSON.stringify(body),
+    signal,
+  })
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    if (response.status === 401) {
+      clearAuthToken()
+    }
+    const error = new Error(data?.error || `Request failed (${response.status})`)
+    error.status = response.status
+    throw error
+  }
+
+  return data
+}
+
+export async function putApi(path, body, signal) {
+  const token = getAuthToken()
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: JSON.stringify(body),
+    signal,
+  })
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    if (response.status === 401) {
+      clearAuthToken()
+    }
+    const error = new Error(data?.error || `Request failed (${response.status})`)
+    error.status = response.status
+    throw error
+  }
+
+  return data
+}
+
+export async function patchApi(path, body, signal) {
+  const token = getAuthToken()
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
