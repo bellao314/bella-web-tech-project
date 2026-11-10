@@ -4,6 +4,7 @@ import Icon from "../components/Icon"
 import { postApi } from "../lib/api"
 import { setStoredAccountType, saveBusinessData } from "../lib/business"
 import { useAuth } from "../hooks/useAuth"
+import vendorPic from "../assets/vendor-pic.jpg"
 
 export default function LoginPage({ onLoginSuccess }) {
   const navigate = useNavigate()
@@ -153,7 +154,14 @@ export default function LoginPage({ onLoginSuccess }) {
           </>
         )}
 
-        <img src="./assets/vendor-pic.jpg" alt="Vendor Image by Kampus Production" />
+        <div className="vendor-pic-container ratio ratio-16x9 d-lg-none">
+          <img className="vendor-pic" src={vendorPic} alt="Vendor Image by Kampus Production" />
+          <div className="vendor-pic-overlay" aria-hidden="true" />
+        </div>
+        <div className="vendor-pic-container ratio ratio-21x9 d-none d-lg-block">
+          <img className="vendor-pic" src={vendorPic} alt="Vendor Image by Kampus Production" />
+          <div className="vendor-pic-overlay" aria-hidden="true" />
+        </div>
 
         <label>
           <span>Email address</span>

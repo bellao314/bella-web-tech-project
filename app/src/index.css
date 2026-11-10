@@ -52,6 +52,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
 
 .login-screen { padding: 68px 25px 36px; display: flex; flex-direction: column; }
 .brand-mark { width: 51px; height: 51px; display: grid; place-items: center; color: white; border-radius: 17px 17px 17px 5px; background: var(--forest); }
+.vendor-pic-container { width: 75%; margin: 15px 10% 0; border-radius: 17px; overflow: hidden; }
+.vendor-pic-overlay { position: absolute; inset: 0; background: rgb(248 248 244 / 50%); }
+.vendor-pic { display: block; width: 100%; height: 100%; object-fit: cover; }
 .login-copy { margin-top: 46px; }
 .login-copy > p:last-child { margin: 0; max-width: 315px; color: var(--muted); font-size: 14px; line-height: 1.55; }
 .login-form { margin-top: auto; }
