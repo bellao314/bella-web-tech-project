@@ -241,23 +241,6 @@ export default function ProfilePage() {
             </div>
           </section>
 
-          {!isBusiness && (
-            <section className="stats-row">
-              <div>
-                <strong>{favorites.length}</strong>
-                <span>Favorites</span>
-              </div>
-              <div>
-                <strong>{profile?.stats?.Reviews ?? 0}</strong>
-                <span>Reviews</span>
-              </div>
-              <div>
-                <strong>{profile?.stats?.["Places Visited"] ?? 0}</strong>
-                <span>Visited</span>
-              </div>
-            </section>
-          )}
-
           <section className="profile-section">
             <div className="section-heading">
               <h3>{isBusiness ? "Business details" : "User details"}</h3>

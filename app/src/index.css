@@ -182,7 +182,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
 .business-status > span { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 50%; background: var(--forest); color: white; }
 .business-status h4 { margin: 0; font-size: 12px; }
 .business-status p { margin: 2px 0 0; color: var(--muted); font-size: 9px; }
-.info-row { padding: 11px 0; display: flex; justify-content: space-between; border-top: 1px solid var(--line); font-size: 10px; }
+.info-row { padding: 11px 0; display: flex; justify-content: space-between; border-top: 1px solid var(--line); font-size: 12px; }
 .info-row span { color: var(--muted); }
 .info-row strong { font-weight: 700; }
 .compact { min-height: 43px; margin-top: 8px; font-size: 11px; }
