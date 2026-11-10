@@ -57,7 +57,6 @@ export default function ProfilePage() {
   const isBusiness = accountType === "business"
 
   // Customer Location (City) state
-  const profileCity = valueFrom(profile, ["city", "userCity"])
   const [cityInput, setCityInput] = useState(() => localStorage.getItem("userCity") || "")
   const [currentCity, setCurrentCity] = useState(() => localStorage.getItem("userCity") || "")
   const [citySaveMessage, setCitySaveMessage] = useState("")
@@ -67,8 +66,6 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profile) {
       const city = profile.city ?? localStorage.getItem("userCity") ?? ""
-      setCurrentCity(city)
-      setCityInput(city)
       if (city) {
         localStorage.setItem("userCity", city)
         if (profile.latitude != null && profile.longitude != null) {
@@ -352,7 +349,7 @@ export default function ProfilePage() {
                       type="text"
                       placeholder="e.g. St. Louis, MO"
                       value={cityInput}
-                      onChange={(e) => setCityInput(e.target.value)}
+                      onChange={(e) => {setCityInput(e.target.value), setCurrentCity(e.target.value)}}
                       aria-label="City location"
                     />
                     {cityInput && (
