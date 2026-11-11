@@ -155,24 +155,9 @@ export default function ProfilePage() {
 
   // Business Location & Hours state
   const [businessData, setBusinessData] = useState(() => getBusinessData(name || "My Business"))
-  const [customLocAddress, setCustomLocAddress] = useState(() => {
-    const b = getBusinessData(name || "My Business")
-    return isBusinessScheduled(b) ? (b.address || "") : ""
-  })
-  const [customStartDateTime, setCustomStartDateTime] = useState(() => {
-    const b = getBusinessData(name || "My Business")
-    if (isBusinessScheduled(b) && b.startTime) {
-      return toLocalDatetimeString(b.startTime)
-    }
-    return ""
-  })
-  const [customFinishDateTime, setCustomFinishDateTime] = useState(() => {
-    const b = getBusinessData(name || "My Business")
-    if (isBusinessScheduled(b) && b.expiresAt) {
-      return toLocalDatetimeString(b.expiresAt)
-    }
-    return ""
-  })
+  const [customLocAddress, setCustomLocAddress] = useState("")
+  const [customStartDateTime, setCustomStartDateTime] = useState("")
+  const [customFinishDateTime, setCustomFinishDateTime] = useState("")
   const [saveMessage, setSaveMessage] = useState("")
   const [businessSaveError, setBusinessSaveError] = useState("")
   const [isSavingBusiness, setIsSavingBusiness] = useState(false)
@@ -232,11 +217,7 @@ export default function ProfilePage() {
     const handleUpdate = (e) => {
       const updated = e?.detail || getBusinessData(name || "My Business")
       setBusinessData(updated)
-      if (isBusinessScheduled(updated)) {
-        setCustomLocAddress(updated.address || "")
-        setCustomStartDateTime(toLocalDatetimeString(updated.startTime))
-        setCustomFinishDateTime(toLocalDatetimeString(updated.expiresAt))
-      } else {
+      if (!isBusinessScheduled(updated)) {
         setCustomLocAddress("")
         setCustomStartDateTime("")
         setCustomFinishDateTime("")
@@ -409,7 +390,12 @@ export default function ProfilePage() {
     }
 
     setBusinessData(updated)
-    setSaveMessage(`Location and operating hours scheduled! The map view will now center here.`)
+    setCustomLocAddress("")
+    setCustomStartDateTime("")
+    setCustomFinishDateTime("")
+    setSuggestions([])
+    setShowSuggestions(false)
+    setSaveMessage("Location and operating hours scheduled! The map view will now center here.")
     setTimeout(() => setSaveMessage(""), 5000)
     setIsSavingBusiness(false)
   }

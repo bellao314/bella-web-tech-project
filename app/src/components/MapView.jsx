@@ -65,9 +65,9 @@ const VendorMarkers = ({
             onClick={() => handleMarkerClick(vendor)}
           >
             <Pin
-              background={isSelected ? '#9c88c0' : isMyBusiness ? '#422e65' : 'var(--forest)'}
+              background={isSelected ? 'var(--muted)' : isMyBusiness ? 'var(--muted)' : 'var(--forest)'}
               glyphColor="#ffffff"
-              borderColor={isSelected ? 'var(--lime)' : isMyBusiness ? 'var(--lime)' : 'var(--ink)'}
+              borderColor={isSelected ? 'var(--forest)' : isMyBusiness ? 'var(--forest)' : 'var(--ink)'}
               scale={isSelected || isMyBusiness ? 1.15 : 1.0}
             />
           </AdvancedMarker>
