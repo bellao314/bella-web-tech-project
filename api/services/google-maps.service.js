@@ -74,3 +74,46 @@ export async function searchPlaces(textQuery, options = {}) {
   const query = new URLSearchParams(params);
   return await googleRequest(`${GOOGLE_MAPS_BASE_URLS.places}/textsearch/json?${query}`);
 }
+
+/**
+ * Calculate distance in miles between two coordinates using the Haversine formula.
+ */
+export function calculateDistanceInMiles(lat1, lon1, lat2, lon2) {
+  const p1Lat = Number(lat1);
+  const p1Lon = Number(lon1);
+  const p2Lat = Number(lat2);
+  const p2Lon = Number(lon2);
+
+  if (
+    !Number.isFinite(p1Lat) ||
+    !Number.isFinite(p1Lon) ||
+    !Number.isFinite(p2Lat) ||
+    !Number.isFinite(p2Lon)
+  ) {
+    return null;
+  }
+
+  const R = 3958.8; // Earth radius in miles
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const dLat = toRad(p2Lat - p1Lat);
+  const dLon = toRad(p2Lon - p1Lon);
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(p1Lat)) * Math.cos(toRad(p2Lat)) * Math.sin(dLon / 2) ** 2;
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c;
+
+  return Number.isFinite(distance) ? distance : null;
+}
+
+/**
+ * Format distance in miles for user display.
+ */
+export function formatDistance(miles) {
+  if (miles == null || !Number.isFinite(miles)) return null;
+  if (miles < 0.05) return "0.1 mi";
+  return `${miles.toFixed(1)} mi`;
+}
+

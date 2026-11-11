@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db } from "../prisma/db.ts";
+import { calculateDistanceInMiles, formatDistance } from "../services/google-maps.service.js";
 
 const router = Router();
 
@@ -34,7 +35,7 @@ const CITY_COORDINATES = {
   "Farmington, MO": { lat: 37.7801, lng: -90.4218 },
 };
 
-export function formatVendor(vendor) {
+export function formatVendor(vendor, userCoords = null) {
   const id = Number(vendor.id);
   const base = CITY_COORDINATES[vendor.city] || { lat: 38.6270, lng: -90.1994 };
   const latOffset = (((id * 17) % 40) - 20) * 0.0012;
@@ -47,7 +48,18 @@ export function formatVendor(vendor) {
     ? Number(vendor.location.longitude)
     : Number((base.lng + lngOffset).toFixed(6));
 
-  const distance = `${(0.2 + ((id * 7) % 35) / 10).toFixed(1)} mi`;
+  let distance = null;
+  let distanceInMiles = null;
+  if (
+    userCoords &&
+    Number.isFinite(Number(userCoords.lat)) &&
+    Number.isFinite(Number(userCoords.lng)) &&
+    Number.isFinite(lat) &&
+    Number.isFinite(lng)
+  ) {
+    distanceInMiles = calculateDistanceInMiles(userCoords.lat, userCoords.lng, lat, lng);
+    distance = formatDistance(distanceInMiles);
+  }
 
   return {
     id: vendor.id,
@@ -66,6 +78,7 @@ export function formatVendor(vendor) {
       longitude: lng,
     },
     distance,
+    distanceInMiles,
     hours: "10:00 AM – 6:00 PM",
   };
 }
@@ -73,7 +86,19 @@ export function formatVendor(vendor) {
 router.get("/", async (req, res, next) => {
   try {
     const rawVendors = await db.orm.public.Vendor.include("location").all();
-    const vendors = rawVendors.map(formatVendor);
+    const lat = req.query.lat != null ? Number(req.query.lat) : null;
+    const lng = req.query.lng != null ? Number(req.query.lng) : null;
+    const userCoords = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+
+    let vendors = rawVendors.map((v) => formatVendor(v, userCoords));
+    if (userCoords) {
+      vendors.sort((a, b) => {
+        const distA = a.distanceInMiles != null ? a.distanceInMiles : Infinity;
+        const distB = b.distanceInMiles != null ? b.distanceInMiles : Infinity;
+        return distA - distB;
+      });
+    }
+
     return res.json({ vendors });
   } catch (error) {
     next(error);

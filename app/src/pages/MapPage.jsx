@@ -14,6 +14,8 @@ import {
   isBusinessExpired,
   resetBusinessLocationHours,
   parseOperatingHours,
+  calculateDistanceInMiles,
+  formatDistance,
 } from "../lib/business"
 import { matchesVendorSearch } from "../lib/search"
 
@@ -143,7 +145,7 @@ export default function MapPage() {
 
   const userLocation = useMemo(() => {
     // If business has an active location and operating hours, center the map there
-    if (businessData && isBusinessScheduled(businessData)) {
+    if (isBusiness && businessData && isBusinessScheduled(businessData)) {
       const bLat = Number(businessData.latitude)
       const bLng = Number(businessData.longitude)
       if (Number.isFinite(bLat) && Number.isFinite(bLng)) {
@@ -198,11 +200,11 @@ export default function MapPage() {
       coords = null
     }
     return { city, coords }
-  }, [businessData, updatedLocation, profile])
+  }, [isBusiness, businessData, updatedLocation, profile])
 
   const vendors = useMemo(() => {
     const list = collectionFrom(data, ["vendors"]).map(vendorFrom)
-    if (!businessData || !isBusinessLive(businessData)) return list
+    if (!isBusiness || !businessData || !isBusinessLive(businessData)) return list
 
     const lat = Number(businessData.latitude)
     const lng = Number(businessData.longitude)
@@ -219,7 +221,7 @@ export default function MapPage() {
       hours: businessData.hours,
       latitude: lat,
       longitude: lng,
-      distance: "0.1 mi",
+      distance: null,
     })
 
     const existingIndex = list.findIndex(
@@ -237,13 +239,57 @@ export default function MapPage() {
     }
 
     return [businessVendor, ...list]
-  }, [data, businessData])
+  }, [data, businessData, isBusiness])
+
+  const sortedVendors = useMemo(() => {
+    const userLat = Number(userLocation?.coords?.lat)
+    const userLng = Number(userLocation?.coords?.lng)
+    const hasUserCoords = Number.isFinite(userLat) && Number.isFinite(userLng)
+
+    const listWithDistance = vendors.map((vendor) => {
+      if (!hasUserCoords) {
+        return {
+          ...vendor,
+          distance: null,
+          distanceInMiles: null,
+        }
+      }
+
+      const vLat = Number(vendor.latitude ?? vendor.location?.latitude ?? vendor.lat)
+      const vLng = Number(vendor.longitude ?? vendor.location?.longitude ?? vendor.lng)
+
+      if (Number.isFinite(vLat) && Number.isFinite(vLng)) {
+        const miles = calculateDistanceInMiles(userLat, userLng, vLat, vLng)
+        return {
+          ...vendor,
+          distanceInMiles: miles,
+          distance: formatDistance(miles),
+        }
+      }
+
+      return {
+        ...vendor,
+        distanceInMiles: Infinity,
+        distance: null,
+      }
+    })
+
+    if (!hasUserCoords) {
+      return listWithDistance
+    }
+
+    return [...listWithDistance].sort((a, b) => {
+      const distA = a.distanceInMiles != null ? a.distanceInMiles : Infinity
+      const distB = b.distanceInMiles != null ? b.distanceInMiles : Infinity
+      return distA - distB
+    })
+  }, [vendors, userLocation?.coords])
 
   const searchedVendors = useMemo(() => {
-    if (!searchQuery.trim()) return vendors
+    if (!searchQuery.trim()) return sortedVendors
     const q = searchQuery.toLowerCase().trim()
-    return vendors.filter((vendor) => matchesVendorSearch(vendor, q))
-  }, [vendors, searchQuery])
+    return sortedVendors.filter((vendor) => matchesVendorSearch(vendor, q))
+  }, [sortedVendors, searchQuery])
 
   // Display vendors within bounds, or all search matches if none fall within current view
   const visibleVendors = useMemo(() => {
@@ -372,7 +418,7 @@ export default function MapPage() {
                     {vendor.type && <p>{vendor.type}</p>}
                     {(vendor.distance || vendor.city) && (
                       <small>
-                        <Icon name="pin" size={13} /> {vendor.distance || vendor.city}
+                        <Icon name="pin" size={13} /> {[vendor.distance, vendor.city].filter(Boolean).join(" · ")}
                         {vendor.hours ? ` · ${vendor.hours}` : ""}
                       </small>
                     )}

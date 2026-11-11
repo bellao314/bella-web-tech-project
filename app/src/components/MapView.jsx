@@ -118,9 +118,9 @@ const VendorMarkers = ({
               <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>
                 {selectedVendor.type}
               </div>
-              {selectedVendor.city && (
+              {(selectedVendor.distance || selectedVendor.city) && (
                 <div style={{ fontSize: '10px', color: 'var(--forest)', fontWeight: 600, marginBottom: '8px' }}>
-                  {selectedVendor.city}
+                  {[selectedVendor.distance, selectedVendor.city].filter(Boolean).join(" · ")}
                 </div>
               )}
               <button
@@ -187,6 +187,9 @@ function MapView({
   const activeUserCoords = useMemo(() => {
     if (userCoordinates && Number.isFinite(userCoordinates.lat) && Number.isFinite(userCoordinates.lng)) {
       return { lat: Number(userCoordinates.lat), lng: Number(userCoordinates.lng) };
+    }
+    if (userCoordinates === null) {
+      return null;
     }
     try {
       const stored = localStorage.getItem("userCityCoords");

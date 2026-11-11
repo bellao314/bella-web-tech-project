@@ -32,7 +32,7 @@ export function vendorFrom(record) {
     name: valueFrom(record, ["name", "businessName", "title"]),
     type: valueFrom(record, ["type", "category", "vendorType"]),
     city: valueFrom(record, ["city", "locality", "address"]),
-    distance: valueFrom(record, ["distance", "distanceText"]),
+    distance: valueFrom(record, ["distance", "distanceText"], null),
     latitude: Number.isFinite(latitude) ? latitude : null,
     longitude: Number.isFinite(longitude) ? longitude : null,
   }

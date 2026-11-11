@@ -5,6 +5,7 @@ import SearchBar from "../components/SearchBar"
 import { collectionFrom, valueFrom, vendorFrom } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
 import { useFavorites } from "../hooks/useFavorites"
+import { calculateDistanceInMiles, formatDistance } from "../lib/business"
 
 export default function RecommendedPage() {
   const { data, loading, error } = useApiResource("/recommendations", [])
@@ -13,7 +14,42 @@ export default function RecommendedPage() {
   const [searchQuery, setSearchQuery] = useState("")
 
   const cards = useMemo(() => {
-    const list = collectionFrom(data, ["recommendations", "vendors"]).map(vendorFrom)
+    let userCoords = null
+    try {
+      const stored = localStorage.getItem("userCityCoords")
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (Number.isFinite(parsed?.lat) && Number.isFinite(parsed?.lng)) {
+          userCoords = parsed
+        }
+      }
+    } catch {
+      userCoords = null
+    }
+
+    const list = collectionFrom(data, ["recommendations", "vendors"]).map((item) => {
+      const vendor = vendorFrom(item)
+      if (
+        userCoords &&
+        Number.isFinite(userCoords.lat) &&
+        Number.isFinite(userCoords.lng) &&
+        Number.isFinite(vendor.latitude) &&
+        Number.isFinite(vendor.longitude)
+      ) {
+        const miles = calculateDistanceInMiles(userCoords.lat, userCoords.lng, vendor.latitude, vendor.longitude)
+        return {
+          ...vendor,
+          distanceInMiles: miles,
+          distance: formatDistance(miles),
+        }
+      }
+      return {
+        ...vendor,
+        distanceInMiles: null,
+        distance: null,
+      }
+    })
+
     if (!searchQuery.trim()) return list
     const q = searchQuery.toLowerCase()
     return list.filter(
