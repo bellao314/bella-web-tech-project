@@ -163,7 +163,6 @@ function MapView({
   onToggleFavorite,
   placing = false,
   userCoordinates = null,
-  userCity = null,
 }) {
   const validVendors = useMemo(() => {
     return vendors.filter(
@@ -184,7 +183,9 @@ function MapView({
           return { lat: Number(parsed.lat), lng: Number(parsed.lng) };
         }
       }
-    } catch {}
+    } catch {
+      return null;
+    }
     return null;
   }, [userCoordinates]);
 

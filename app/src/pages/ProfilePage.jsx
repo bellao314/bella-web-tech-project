@@ -238,7 +238,7 @@ export default function ProfilePage() {
       <header className="page-header">
         <div>
           <p className="eyebrow">{isBusiness ? "BUSINESS HUB" : "YOUR SPACE"}</p>
-          <h2>{isBusiness ? "Business Account" : "Profile"}</h2>
+          <h2>{isBusiness ? "Business Account" : "Account Details"}</h2>
         </div>
         <button
             type="button"
@@ -682,7 +682,7 @@ export default function ProfilePage() {
                     ["Drop or move map pin", "pin", () => navigate("/pin")],
                   ]
                 : [
-                  
+
                 ]
             }
           />
