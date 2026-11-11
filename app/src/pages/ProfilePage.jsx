@@ -230,7 +230,7 @@ export default function ProfilePage() {
     [isBusiness ? "Business name" : "Full name", name || "Not set"],
     ["Email address", email],
     ["Member since", formatDate(createdAt)],
-    !isBusiness ? ["Location (City)", currentCity || "Not set"] : null,
+    !isBusiness ? ["Location", currentCity || "Not set"] : null,
   ].filter(Boolean)
 
   return (
@@ -240,6 +240,24 @@ export default function ProfilePage() {
           <p className="eyebrow">{isBusiness ? "BUSINESS HUB" : "YOUR SPACE"}</p>
           <h2>{isBusiness ? "Business Account" : "Profile"}</h2>
         </div>
+        <button
+            type="button"
+            onClick={handleSignOut}
+            style={{
+              margin: "6px 22px 24px",
+              width: "80px",
+              padding: "10px",
+              borderRadius: "14px",
+              border: "1px solid var(--line)",
+              background: "white",
+              color: "#c92a2a",
+              fontWeight: "600",
+              fontSize: "11px",
+              cursor: "pointer",
+            }}
+          >
+            Sign out
+          </button>
       </header>
 
       {!token && (
@@ -662,34 +680,12 @@ export default function ProfilePage() {
                     ["View business details page", "briefcase", () => navigate("/vendor/my-business")],
                     ["View live pin on map", "map", () => navigate("/")],
                     ["Drop or move map pin", "pin", () => navigate("/pin")],
-                    ["Account settings", "user"],
                   ]
                 : [
-                    ["Account settings", "user"],
-                    ["Notifications", "settings"],
-                    ["Privacy & location", "lock"],
-                  ]
+                  
+                ]
             }
           />
-
-          <button
-            type="button"
-            onClick={handleSignOut}
-            style={{
-              margin: "6px 22px 24px",
-              width: "calc(100% - 44px)",
-              padding: "13px",
-              borderRadius: "14px",
-              border: "1px solid var(--line)",
-              background: "white",
-              color: "#c92a2a",
-              fontWeight: "700",
-              fontSize: "13px",
-              cursor: "pointer",
-            }}
-          >
-            Sign out
-          </button>
         </>
       )}
     </main>
