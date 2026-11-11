@@ -501,13 +501,6 @@ export default function ProfilePage() {
               <section className="profile-section">
                 <div className="section-heading">
                   <h3>Location & Hours</h3>
-                  <button
-                    type="button"
-                    onClick={() => navigate("/vendor/my-business")}
-                    style={{ border: 0, background: "none", color: "var(--forest)", fontSize: "11px", fontWeight: "700", cursor: "pointer" }}
-                  >
-                    View details page →
-                  </button>
                 </div>
 
                 <div className="info-row">
@@ -574,27 +567,6 @@ export default function ProfilePage() {
                     >
                       Save Location & Hours <Icon name="check" size={16} />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => navigate("/pin")}
-                      style={{
-                        padding: "0 14px",
-                        border: "1px solid var(--line)",
-                        borderRadius: "13px",
-                        background: "white",
-                        color: "var(--forest)",
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "5px",
-                        minHeight: "44px",
-                      }}
-                      title="Set precise pin on map"
-                    >
-                      <Icon name="pin" size={16} /> Pin
-                    </button>
                   </div>
                 </form>
               </section>
@@ -607,7 +579,6 @@ export default function ProfilePage() {
                 [
                   ["View business details page", "briefcase", () => navigate("/vendor/my-business")],
                   ["View live pin on map", "map", () => navigate("/")],
-                  ["Drop or move map pin", "pin", () => navigate("/pin")],
                 ]
               }
             />

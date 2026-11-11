@@ -97,7 +97,7 @@ export default function LoginPage({ onLoginSuccess }) {
             {isSignUp
               ? (accountType === "business"
                   ? "Create a business account to share your locations, manage your profile, and connect with customers."
-                  : "Create an account to discover independent vendors, save your favorites, and drop pins.")
+                  : "Create an account to discover independent vendors and save your favorites.")
               : "Discover independent vendors, save the ones you love, and always know where to find them."}
           </p>
         </div>

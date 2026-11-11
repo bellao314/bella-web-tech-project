@@ -3,7 +3,6 @@ import BottomNav from "./components/BottomNav"
 import HomePage from "./pages/HomePage"
 import RecommendedPage from "./pages/RecommendedPage"
 import ProfilePage from "./pages/ProfilePage"
-import PinPage from "./pages/PinPage"
 import VendorInfoPage from "./pages/VendorInfoPage"
 import { useAuth } from "./hooks/useAuth"
 
@@ -31,7 +30,6 @@ export default function App() {
         <Route path="map" element={<Navigate to="/" replace />} />
         <Route path="recommended" element={<RecommendedPage />} />
         <Route path="profile" element={<ProfilePage />} />
-        <Route path="pin" element={<PinPage />} />
         <Route path="vendor/:vendorId" element={<VendorInfoPage />} />
       </Route>
     </Routes>
