@@ -163,6 +163,7 @@ function MapView({
   onToggleFavorite,
   placing = false,
   userCoordinates = null,
+  style = {},
 }) {
   const validVendors = useMemo(() => {
     return vendors.filter(
@@ -225,7 +226,7 @@ function MapView({
       <Map
         defaultZoom={placing ? 14 : 12}
         defaultCenter={center}
-        style={{ width: '100%', height: '100vh' }}
+        style={{ width: '100%', height: '100%', ...style }}
         onCameraChanged={handleCameraChanged}
         mapId="da37f3254c6a6d1c"
         gestureHandling="greedy"

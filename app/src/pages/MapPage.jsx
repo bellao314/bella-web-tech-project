@@ -337,16 +337,18 @@ export default function MapPage() {
           </div>
         </section>
       </div>
-      <MapView
-        vendors={searchedVendors}
-        onBoundsChange={setBounds}
-        selectedVendorId={selected}
-        onSelectVendor={handleSelectVendor}
-        isFavorite={isFavorite}
-        onToggleFavorite={toggleFavorite}
-        userCoordinates={userLocation.coords}
-        userCity={userLocation.city}
-      />
+      <div className="map-container">
+        <MapView
+          vendors={searchedVendors}
+          onBoundsChange={setBounds}
+          selectedVendorId={selected}
+          onSelectVendor={handleSelectVendor}
+          isFavorite={isFavorite}
+          onToggleFavorite={toggleFavorite}
+          userCoordinates={userLocation.coords}
+          userCity={userLocation.city}
+        />
+      </div>
     </main>
   )
 }
