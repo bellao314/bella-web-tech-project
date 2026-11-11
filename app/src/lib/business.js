@@ -1,64 +1,5 @@
 import { getApi, postApi } from "./api.js";
 
-export const PRESET_LOCATIONS = [
-  {
-    name: "River Market Plaza",
-    city: "Portland, OR",
-    address: "1122 NW River Street, Portland, OR 97209",
-    latitude: 45.5231,
-    longitude: -122.6765,
-  },
-  {
-    name: "Central West End",
-    city: "St. Louis, MO",
-    address: "4900 Euclid Ave, St. Louis, MO 63108",
-    latitude: 38.6465,
-    longitude: -90.2624,
-  },
-  {
-    name: "Downtown / Gateway Arch",
-    city: "St. Louis, MO",
-    address: "100 Washington Ave, St. Louis, MO 63102",
-    latitude: 38.6270,
-    longitude: -90.1994,
-  },
-  {
-    name: "Tower Grove Park",
-    city: "St. Louis, MO",
-    address: "4257 Northeast Dr, St. Louis, MO 63110",
-    latitude: 38.6056,
-    longitude: -90.2570,
-  },
-  {
-    name: "The Delmar Loop",
-    city: "University City, MO",
-    address: "6100 Delmar Blvd, University City, MO 63112",
-    latitude: 38.6559,
-    longitude: -90.3098,
-  },
-  {
-    name: "Clayton Downtown",
-    city: "Clayton, MO",
-    address: "10 N Central Ave, Clayton, MO 63105",
-    latitude: 38.6533,
-    longitude: -90.3323,
-  },
-  {
-    name: "Kirkwood Farmers Market",
-    city: "Kirkwood, MO",
-    address: "150 E Argonne Dr, Kirkwood, MO 63122",
-    latitude: 38.5834,
-    longitude: -90.4067,
-  },
-  {
-    name: "Maplewood Historic Strip",
-    city: "Maplewood, MO",
-    address: "7300 Manchester Rd, Maplewood, MO 63143",
-    latitude: 38.6117,
-    longitude: -90.3228,
-  },
-];
-
 export const PRESET_HOURS = [
   "7:00 AM – 2:00 PM",
   "8:00 AM – 3:00 PM",
@@ -66,29 +7,6 @@ export const PRESET_HOURS = [
   "10:00 AM – 6:00 PM",
   "11:00 AM – 8:00 PM",
   "4:00 PM – 10:00 PM",
-];
-
-const FALLBACK_LOCATIONS = [
-  { match: "portland", lat: 45.5231, lng: -122.6765, address: "1122 NW River Street, Portland, OR 97209", city: "Portland, OR" },
-  { match: "river market", lat: 45.5231, lng: -122.6765, address: "1122 NW River Street, Portland, OR 97209", city: "Portland, OR" },
-  { match: "1122 nw river", lat: 45.5231, lng: -122.6765, address: "1122 NW River Street, Portland, OR 97209", city: "Portland, OR" },
-  { match: "central west end", lat: 38.6465, lng: -90.2624, address: "4900 Euclid Ave, St. Louis, MO 63108", city: "St. Louis, MO" },
-  { match: "euclid & mcpherson", lat: 38.6465, lng: -90.2624, address: "4900 Euclid Ave, St. Louis, MO 63108", city: "St. Louis, MO" },
-  { match: "gateway arch", lat: 38.6270, lng: -90.1994, address: "100 Washington Ave, St. Louis, MO 63102", city: "St. Louis, MO" },
-  { match: "tower grove", lat: 38.6056, lng: -90.2570, address: "4257 Northeast Dr, St. Louis, MO 63110", city: "St. Louis, MO" },
-  { match: "delmar loop", lat: 38.6559, lng: -90.3098, address: "6100 Delmar Blvd, University City, MO 63112", city: "University City, MO" },
-  { match: "clayton", lat: 38.6533, lng: -90.3323, address: "10 N Central Ave, Clayton, MO 63105", city: "Clayton, MO" },
-  { match: "kirkwood", lat: 38.5834, lng: -90.4067, address: "150 E Argonne Dr, Kirkwood, MO 63122", city: "Kirkwood, MO" },
-  { match: "maplewood", lat: 38.6117, lng: -90.3228, address: "7300 Manchester Rd, Maplewood, MO 63143", city: "Maplewood, MO" },
-  { match: "richmond heights", lat: 38.6320, lng: -90.3292, address: "1155 Saint Louis Galleria St, Richmond Heights, MO 63117", city: "Richmond Heights, MO" },
-  { match: "university city", lat: 38.6559, lng: -90.3098, address: "6801 Delmar Blvd, University City, MO 63130", city: "University City, MO" },
-  { match: "webster groves", lat: 38.5926, lng: -90.3556, address: "101 W Lockwood Ave, Webster Groves, MO 63119", city: "Webster Groves, MO" },
-  { match: "creve coeur", lat: 38.6703, lng: -90.4939, address: "11660 Olive Blvd, Creve Coeur, MO 63141", city: "Creve Coeur, MO" },
-  { match: "chesterfield", lat: 38.6631, lng: -90.5772, address: "1 Chesterfield Mall, Chesterfield, MO 63017", city: "Chesterfield, MO" },
-  { match: "st. charles", lat: 38.7881, lng: -90.4974, address: "200 N Main St, St. Charles, MO 63301", city: "St. Charles, MO" },
-  { match: "edwardsville", lat: 38.8114, lng: -89.9532, address: "101 S Main St, Edwardsville, IL 62025", city: "Edwardsville, IL" },
-  { match: "st. louis", lat: 38.6270, lng: -90.1994, address: "100 S 4th St, St. Louis, MO 63102", city: "St. Louis, MO" },
-  { match: "saint louis", lat: 38.6270, lng: -90.1994, address: "100 S 4th St, St. Louis, MO 63102", city: "St. Louis, MO" },
 ];
 
 const STORAGE_KEY = "businessLocationHours";
@@ -112,7 +30,7 @@ export function setStoredAccountType(role) {
 }
 
 /**
- * Geocode an address string using backend maps API, browser google.maps, or fallback coordinates.
+ * Geocode an address string using Google Geocoding API (client Geocoder or backend proxy).
  */
 export async function geocodeLocation(addressQuery) {
   if (!addressQuery || typeof addressQuery !== "string") {
@@ -121,7 +39,7 @@ export async function geocodeLocation(addressQuery) {
 
   const clean = addressQuery.trim();
 
-  // 1. Check direct coordinates (e.g. "38.6270, -90.1994")
+  // 1. Direct coordinate format: "lat, lng"
   const directMatch = clean.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
   if (directMatch) {
     const lat = parseFloat(directMatch[1]);
@@ -137,41 +55,7 @@ export async function geocodeLocation(addressQuery) {
     }
   }
 
-  // 2. Call backend Google Geocoding API
-  try {
-    const geoRes = await getApi(`/maps/geocode?address=${encodeURIComponent(clean)}`);
-    const result = geoRes?.results?.[0];
-    const loc = result?.geometry?.location;
-    if (loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
-      let city = "";
-      if (Array.isArray(result?.address_components)) {
-        const locality = result.address_components.find((c) =>
-          c.types?.includes("locality")
-        )?.long_name;
-        const adminArea = result.address_components.find((c) =>
-          c.types?.includes("administrative_area_level_1")
-        )?.short_name;
-        if (locality && adminArea) {
-          city = `${locality}, ${adminArea}`;
-        } else if (locality) {
-          city = locality;
-        }
-      }
-      if (!city) {
-        city = clean.split(",").slice(1).join(",").trim() || clean;
-      }
-      return {
-        lat: Number(loc.lat),
-        lng: Number(loc.lng),
-        city,
-        formattedAddress: result?.formatted_address || clean,
-      };
-    }
-  } catch {
-    // Fall back to browser or local dictionary
-  }
-
-  // 3. In-browser Google Maps Geocoder if loaded
+  // 2. In-browser Google Maps Geocoder if loaded
   if (typeof window !== "undefined" && window.google?.maps?.Geocoder) {
     try {
       const geocoder = new window.google.maps.Geocoder();
@@ -188,91 +72,80 @@ export async function geocodeLocation(addressQuery) {
       const lat = typeof loc.lat === "function" ? loc.lat() : Number(loc.lat);
       const lng = typeof loc.lng === "function" ? loc.lng() : Number(loc.lng);
       if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        let city = "";
+        if (Array.isArray(clientRes.address_components)) {
+          const locality = clientRes.address_components.find((c) =>
+            c.types?.includes("locality")
+          )?.long_name;
+          const adminArea = clientRes.address_components.find((c) =>
+            c.types?.includes("administrative_area_level_1")
+          )?.short_name;
+          if (locality && adminArea) city = `${locality}, ${adminArea}`;
+          else if (locality) city = locality;
+        }
         return {
           lat,
           lng,
-          city: clean.split(",").slice(1).join(",").trim() || clean,
+          city: city || clean.split(",").slice(1).join(",").trim() || clean,
           formattedAddress: clientRes.formatted_address || clean,
         };
       }
     } catch {
-      // Continue to local dictionary
+      // Continue to backend API
     }
   }
 
-  // 4. Match local fallback dictionary
-  const qLower = clean.toLowerCase();
-  for (const preset of PRESET_LOCATIONS) {
-    if (
-      qLower.includes(preset.name.toLowerCase()) ||
-      qLower.includes(preset.address.toLowerCase()) ||
-      preset.address.toLowerCase().includes(qLower)
-    ) {
-      return {
-        lat: preset.latitude,
-        lng: preset.longitude,
-        city: preset.city,
-        formattedAddress: preset.address,
-      };
+  // 3. Call backend Google Geocoding API
+  const geoRes = await getApi(`/maps/geocode?address=${encodeURIComponent(clean)}`);
+  const result = geoRes?.results?.[0];
+  const loc = result?.geometry?.location;
+  if (loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
+    let city = "";
+    if (Array.isArray(result?.address_components)) {
+      const locality = result.address_components.find((c) =>
+        c.types?.includes("locality")
+      )?.long_name;
+      const adminArea = result.address_components.find((c) =>
+        c.types?.includes("administrative_area_level_1")
+      )?.short_name;
+      if (locality && adminArea) {
+        city = `${locality}, ${adminArea}`;
+      } else if (locality) {
+        city = locality;
+      }
     }
-  }
-
-  for (const fb of FALLBACK_LOCATIONS) {
-    if (qLower.includes(fb.match) || fb.match.includes(qLower)) {
-      return {
-        lat: fb.lat,
-        lng: fb.lng,
-        city: fb.city,
-        formattedAddress: fb.address,
-      };
+    if (!city) {
+      city = clean.split(",").slice(1).join(",").trim() || clean;
     }
+    return {
+      lat: Number(loc.lat),
+      lng: Number(loc.lng),
+      city,
+      formattedAddress: result?.formatted_address || clean,
+    };
   }
 
   throw new Error(`Could not find coordinates for "${clean}". Please enter a valid address.`);
 }
 
 /**
- * Autocomplete an address query using Google Places API via backend, in-browser AutocompleteService, or fallback dictionary.
+ * Autocomplete an address query using Google Places API (client AutocompleteService or backend proxy).
  */
 export async function fetchAddressSuggestions(inputQuery) {
   if (!inputQuery || typeof inputQuery !== "string") return [];
   const clean = inputQuery.trim();
   if (clean.length < 2) return [];
 
-  // 1. Google Places Autocomplete API via backend
-  try {
-    const res = await postApi("/maps/places/autocomplete", { input: clean });
-    if (res && Array.isArray(res.suggestions) && res.suggestions.length > 0) {
-      return res.suggestions.map((item, idx) => {
-        const pred = item.placePrediction || {};
-        const mainText =
-          pred.structuredFormat?.mainText?.text ||
-          pred.text?.text ||
-          item.description ||
-          clean;
-        const secondaryText =
-          pred.structuredFormat?.secondaryText?.text || "";
-        const description =
-          pred.text?.text || item.description || [mainText, secondaryText].filter(Boolean).join(", ");
-        return {
-          id: pred.placeId || pred.place || `api_${idx}`,
-          description,
-          mainText,
-          secondaryText,
-        };
-      });
-    }
-  } catch {
-    // Continue to browser AutocompleteService or local list
-  }
-
-  // 2. Client-side Google Maps AutocompleteService if available
+  // 1. In-browser Google Maps AutocompleteService if available
   if (typeof window !== "undefined" && window.google?.maps?.places?.AutocompleteService) {
     try {
       const service = new window.google.maps.places.AutocompleteService();
       const predictions = await new Promise((resolve) => {
         service.getPlacePredictions({ input: clean }, (results, status) => {
-          if (status === "OK" && Array.isArray(results)) {
+          if (
+            (status === window.google.maps.places.PlacesServiceStatus?.OK || status === "OK") &&
+            Array.isArray(results)
+          ) {
             resolve(results);
           } else {
             resolve([]);
@@ -288,35 +161,27 @@ export async function fetchAddressSuggestions(inputQuery) {
         }));
       }
     } catch {
-      // Continue to local match
+      // Continue to backend API
     }
   }
 
-  // 3. Fallback matching from local presets and coordinates
-  const q = clean.toLowerCase();
-  const results = [];
-  const seen = new Set();
-  for (const item of [...PRESET_LOCATIONS, ...FALLBACK_LOCATIONS]) {
-    const addr = item.address;
-    if (!addr) continue;
-    const name = item.name || "";
-    const city = item.city || "";
-    const matchKey = item.match || "";
-    const text = `${matchKey} ${name} ${addr} ${city}`.toLowerCase();
-    if (text.includes(q) || (matchKey && q.includes(matchKey))) {
-      if (!seen.has(addr)) {
-        seen.add(addr);
-        results.push({
-          id: `local_${results.length}`,
-          description: addr,
-          mainText: addr.split(",")[0] || addr,
-          secondaryText: addr.split(",").slice(1).join(", ").trim() || city,
-        });
-      }
+  // 2. Google Places Autocomplete API via backend
+  try {
+    const res = await postApi("/maps/places/autocomplete", { input: clean });
+    const list = res?.predictions || res?.suggestions;
+    if (Array.isArray(list) && list.length > 0) {
+      return list.map((item, idx) => ({
+        id: item.place_id || item.id || `place_${idx}`,
+        description: item.description || item.text?.text || "",
+        mainText: item.structured_formatting?.main_text || item.mainText || item.description,
+        secondaryText: item.structured_formatting?.secondary_text || item.secondaryText || "",
+      }));
     }
+  } catch (err) {
+    console.error("Google Places Autocomplete error:", err);
   }
 
-  return results;
+  return [];
 }
 
 /**

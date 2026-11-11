@@ -4,6 +4,7 @@ import * as mapsController from "../controllers/maps.controller.js";
 const router = Router();
 router.get("/geocode", mapsController.geocode);
 router.get("/reverse-geocode", mapsController.reverseGeocode);
+router.get("/places/autocomplete", mapsController.autocomplete);
 router.post("/places/autocomplete", mapsController.autocomplete);
 router.post("/places/search", mapsController.placeSearch);
 export default router;

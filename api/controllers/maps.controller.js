@@ -28,7 +28,9 @@ export async function reverseGeocode(req, res, next) {
 
 export async function autocomplete(req, res, next) {
   try {
-    const { input, ...options } = req.body;
+    const input = req.body?.input || req.query?.input;
+    const options = { ...(req.query || {}), ...(req.body || {}) };
+    delete options.input;
     res.json(await mapsService.autocompletePlaces(requireString(input, "input"), options));
   } catch (error) { next(error); }
 }

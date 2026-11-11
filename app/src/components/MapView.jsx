@@ -223,7 +223,7 @@ function MapView({
   }
 
   return (
-    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_API_KEY}>
+    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_API_KEY} libraries={["places"]}>
       <Map
         defaultZoom={placing ? 14 : 12}
         defaultCenter={center}

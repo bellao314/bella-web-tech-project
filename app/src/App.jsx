@@ -1,4 +1,5 @@
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom"
+import { APIProvider } from "@vis.gl/react-google-maps"
 import BottomNav from "./components/BottomNav"
 import HomePage from "./pages/HomePage"
 import RecommendedPage from "./pages/RecommendedPage"
@@ -23,7 +24,8 @@ function AppLayout() {
 }
 
 export default function App() {
-  return (
+  const apiKey = import.meta.env.VITE_GOOGLE_API_KEY
+  const routes = (
     <Routes>
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
@@ -34,4 +36,14 @@ export default function App() {
       </Route>
     </Routes>
   )
+
+  if (apiKey) {
+    return (
+      <APIProvider apiKey={apiKey} libraries={["places"]}>
+        {routes}
+      </APIProvider>
+    )
+  }
+
+  return routes
 }
