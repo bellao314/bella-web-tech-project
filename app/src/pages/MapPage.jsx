@@ -38,7 +38,80 @@ export default function MapPage() {
   const { data: profileData } = useApiResource(token ? "/user/profile" : null, null)
   const profile = profileData?.profile || profileData?.data || profileData
 
-  const [userLocation, setUserLocation] = useState(() => {
+  const [updatedLocation, setUpdatedLocation] = useState(null)
+
+  useEffect(() => {
+    const handleLocationUpdate = (e) => {
+      const detail = e?.detail
+      if (!detail) {
+        setUpdatedLocation({ city: null, coords: null })
+        return
+      }
+      const coords =
+        Number.isFinite(detail.latitude) && Number.isFinite(detail.longitude)
+          ? { lat: Number(detail.latitude), lng: Number(detail.longitude) }
+          : null
+      setUpdatedLocation({ city: detail.city || null, coords })
+    }
+
+    window.addEventListener("userLocationUpdated", handleLocationUpdate)
+    return () => window.removeEventListener("userLocationUpdated", handleLocationUpdate)
+  }, [])
+
+  useEffect(() => {
+    if (!profile?.city) return
+    const hasProfileCoords = profile.latitude != null && profile.longitude != null
+    if (hasProfileCoords) return
+
+    let isCancelled = false
+    getApi(`/maps/geocode?address=${encodeURIComponent(profile.city)}`)
+      .then((geo) => {
+        if (isCancelled) return
+        const loc = geo?.results?.[0]?.geometry?.location
+        if (loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
+          const newCoords = { lat: Number(loc.lat), lng: Number(loc.lng) }
+          localStorage.setItem("userCityCoords", JSON.stringify(newCoords))
+          setUpdatedLocation({ city: profile.city, coords: newCoords })
+        }
+      })
+      .catch(() => {})
+
+    return () => {
+      isCancelled = true
+    }
+  }, [profile])
+
+  const userLocation = useMemo(() => {
+    if (updatedLocation) {
+      return updatedLocation
+    }
+
+    if (profile) {
+      if (profile.city === null) {
+        return { city: null, coords: null }
+      }
+      if (profile.city) {
+        let coords = null
+        if (profile.latitude != null && profile.longitude != null) {
+          coords = { lat: Number(profile.latitude), lng: Number(profile.longitude) }
+        }
+        if (!coords) {
+          try {
+            const stored = localStorage.getItem("userCityCoords")
+            if (stored) {
+              const parsed = JSON.parse(stored)
+              if (Number.isFinite(parsed?.lat) && Number.isFinite(parsed?.lng)) {
+                coords = { lat: Number(parsed.lat), lng: Number(parsed.lng) }
+              }
+            }
+          } catch {
+            coords = null
+          }
+        }
+        return { city: profile.city, coords }
+      }
+    }
+
     const city = localStorage.getItem("userCity") || null
     let coords = null
     try {
@@ -49,57 +122,11 @@ export default function MapPage() {
           coords = { lat: Number(parsed.lat), lng: Number(parsed.lng) }
         }
       }
-    } catch {}
+    } catch {
+      coords = null
+    }
     return { city, coords }
-  })
-
-  useEffect(() => {
-    const handleLocationUpdate = (e) => {
-      const detail = e?.detail
-      if (!detail) {
-        setUserLocation({ city: null, coords: null })
-        return
-      }
-      const coords =
-        Number.isFinite(detail.latitude) && Number.isFinite(detail.longitude)
-          ? { lat: Number(detail.latitude), lng: Number(detail.longitude) }
-          : null
-      setUserLocation({ city: detail.city || null, coords })
-    }
-
-    window.addEventListener("userLocationUpdated", handleLocationUpdate)
-    return () => window.removeEventListener("userLocationUpdated", handleLocationUpdate)
-  }, [])
-
-  useEffect(() => {
-    if (profile?.city) {
-      let coords = null
-      if (profile.latitude != null && profile.longitude != null) {
-        coords = { lat: Number(profile.latitude), lng: Number(profile.longitude) }
-      }
-      setUserLocation((prev) => {
-        if (prev.city === profile.city && prev.coords?.lat === coords?.lat && prev.coords?.lng === coords?.lng) {
-          return prev
-        }
-        return { city: profile.city, coords: coords || prev.coords }
-      })
-
-      if (!coords) {
-        getApi(`/maps/geocode?address=${encodeURIComponent(profile.city)}`)
-          .then((geo) => {
-            const loc = geo?.results?.[0]?.geometry?.location
-            if (loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
-              const newCoords = { lat: Number(loc.lat), lng: Number(loc.lng) }
-              localStorage.setItem("userCityCoords", JSON.stringify(newCoords))
-              setUserLocation({ city: profile.city, coords: newCoords })
-            }
-          })
-          .catch(() => {})
-      }
-    } else if (profile && profile.city === null) {
-      setUserLocation({ city: null, coords: null })
-    }
-  }, [profile])
+  }, [updatedLocation, profile])
 
   const [businessData, setBusinessData] = useState(() => getBusinessData())
 
