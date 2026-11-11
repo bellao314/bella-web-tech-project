@@ -16,7 +16,6 @@ import {
   isBusinessScheduled,
   isBusinessExpired,
   fetchAddressSuggestions,
-  toLocalDatetimeString,
   formatDateTimeSingle,
   formatScheduledHours,
   calculateDistanceInMiles,
@@ -65,47 +64,6 @@ export default function ProfilePage() {
   const apiAccountType = valueFrom(profile, ["type", "accountType", "account_type", "role"])
   const accountType = (apiAccountType || localStorage.getItem("userAccountType") || "customer").toLowerCase()
   const isBusiness = accountType === "business"
-
-  const userCoords = useMemo(() => {
-    if (isBusiness && businessData && isBusinessScheduled(businessData)) {
-      const bLat = Number(businessData.latitude)
-      const bLng = Number(businessData.longitude)
-      if (Number.isFinite(bLat) && Number.isFinite(bLng)) return { lat: bLat, lng: bLng }
-    }
-    if (profile?.latitude != null && profile?.longitude != null) {
-      const pLat = Number(profile.latitude)
-      const pLng = Number(profile.longitude)
-      if (Number.isFinite(pLat) && Number.isFinite(pLng)) return { lat: pLat, lng: pLng }
-    }
-    try {
-      const stored = localStorage.getItem("userCityCoords")
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        if (Number.isFinite(parsed?.lat) && Number.isFinite(parsed?.lng)) return { lat: Number(parsed.lat), lng: Number(parsed.lng) }
-      }
-    } catch {
-      // ignore
-    }
-    return null
-  }, [isBusiness, businessData, profile])
-
-  const favoritesWithDistance = useMemo(() => {
-    return favorites.map((vendor) => {
-      let dist = null
-      if (
-        userCoords &&
-        Number.isFinite(Number(vendor.latitude)) &&
-        Number.isFinite(Number(vendor.longitude))
-      ) {
-        const miles = calculateDistanceInMiles(userCoords.lat, userCoords.lng, Number(vendor.latitude), Number(vendor.longitude))
-        dist = formatDistance(miles)
-      }
-      return {
-        ...vendor,
-        distance: dist,
-      }
-    })
-  }, [favorites, userCoords])
 
   // Customer Location (City) state
   const [cityInput, setCityInput] = useState(() => localStorage.getItem("userCity") || "")
@@ -198,6 +156,48 @@ export default function ProfilePage() {
 
   // Business Location & Hours state
   const [businessData, setBusinessData] = useState(() => getBusinessData(name || "My Business"))
+
+  const userCoords = useMemo(() => {
+    if (isBusiness && businessData && isBusinessScheduled(businessData)) {
+      const bLat = Number(businessData.latitude)
+      const bLng = Number(businessData.longitude)
+      if (Number.isFinite(bLat) && Number.isFinite(bLng)) return { lat: bLat, lng: bLng }
+    }
+    if (profile?.latitude != null && profile?.longitude != null) {
+      const pLat = Number(profile.latitude)
+      const pLng = Number(profile.longitude)
+      if (Number.isFinite(pLat) && Number.isFinite(pLng)) return { lat: pLat, lng: pLng }
+    }
+    try {
+      const stored = localStorage.getItem("userCityCoords")
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (Number.isFinite(parsed?.lat) && Number.isFinite(parsed?.lng)) return { lat: Number(parsed.lat), lng: Number(parsed.lng) }
+      }
+    } catch {
+      // ignore
+    }
+    return null
+  }, [isBusiness, businessData, profile])
+
+  const favoritesWithDistance = useMemo(() => {
+    return favorites.map((vendor) => {
+      let dist = null
+      if (
+        userCoords &&
+        Number.isFinite(Number(vendor.latitude)) &&
+        Number.isFinite(Number(vendor.longitude))
+      ) {
+        const miles = calculateDistanceInMiles(userCoords.lat, userCoords.lng, Number(vendor.latitude), Number(vendor.longitude))
+        dist = formatDistance(miles)
+      }
+      return {
+        ...vendor,
+        distance: dist,
+      }
+    })
+  }, [favorites, userCoords])
+
   const [customLocAddress, setCustomLocAddress] = useState("")
   const [customStartDateTime, setCustomStartDateTime] = useState("")
   const [customFinishDateTime, setCustomFinishDateTime] = useState("")
@@ -402,7 +402,7 @@ export default function ProfilePage() {
     }
 
     // Geocode location
-    let geo = null
+    let geo
     try {
       geo = await geocodeLocation(cleanAddress)
     } catch (err) {

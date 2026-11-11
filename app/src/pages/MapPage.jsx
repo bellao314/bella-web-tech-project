@@ -145,7 +145,7 @@ export default function MapPage() {
 
   const userLocation = useMemo(() => {
     // If business has an active location and operating hours, center the map there
-    if (isBusiness && businessData && isBusinessScheduled(businessData)) {
+    if (businessData && isBusinessScheduled(businessData)) {
       const bLat = Number(businessData.latitude)
       const bLng = Number(businessData.longitude)
       if (Number.isFinite(bLat) && Number.isFinite(bLng)) {
@@ -200,11 +200,11 @@ export default function MapPage() {
       coords = null
     }
     return { city, coords }
-  }, [isBusiness, businessData, updatedLocation, profile])
+  }, [businessData, updatedLocation, profile])
 
   const vendors = useMemo(() => {
     const list = collectionFrom(data, ["vendors"]).map(vendorFrom)
-    if (!isBusiness || !businessData || !isBusinessLive(businessData)) return list
+    if (!businessData || !isBusinessLive(businessData)) return list
 
     const lat = Number(businessData.latitude)
     const lng = Number(businessData.longitude)
@@ -239,22 +239,22 @@ export default function MapPage() {
     }
 
     return [businessVendor, ...list]
-  }, [data, businessData, isBusiness])
+  }, [data, businessData])
 
   const sortedVendors = useMemo(() => {
     const userLat = Number(userLocation?.coords?.lat)
     const userLng = Number(userLocation?.coords?.lng)
     const hasUserCoords = Number.isFinite(userLat) && Number.isFinite(userLng)
 
-    const listWithDistance = vendors.map((vendor) => {
-      if (!hasUserCoords) {
-        return {
-          ...vendor,
-          distance: null,
-          distanceInMiles: null,
-        }
-      }
+    if (!hasUserCoords) {
+      return vendors.map((vendor) => ({
+        ...vendor,
+        distance: null,
+        distanceInMiles: null,
+      }))
+    }
 
+    const listWithDistance = vendors.map((vendor) => {
       const vLat = Number(vendor.latitude ?? vendor.location?.latitude ?? vendor.lat)
       const vLng = Number(vendor.longitude ?? vendor.location?.longitude ?? vendor.lng)
 
@@ -274,16 +274,12 @@ export default function MapPage() {
       }
     })
 
-    if (!hasUserCoords) {
-      return listWithDistance
-    }
-
     return [...listWithDistance].sort((a, b) => {
       const distA = a.distanceInMiles != null ? a.distanceInMiles : Infinity
       const distB = b.distanceInMiles != null ? b.distanceInMiles : Infinity
       return distA - distB
     })
-  }, [vendors, userLocation?.coords])
+  }, [vendors, userLocation.coords?.lat, userLocation.coords?.lng])
 
   const searchedVendors = useMemo(() => {
     if (!searchQuery.trim()) return sortedVendors
