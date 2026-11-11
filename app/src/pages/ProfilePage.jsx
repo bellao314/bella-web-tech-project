@@ -167,11 +167,27 @@ export default function ProfilePage() {
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const autocompleteRef = useRef(null)
+  const isSelectionRef = useRef(false)
+
+  const handleSelectSuggestion = (suggestion) => {
+    isSelectionRef.current = true
+    setCustomLocAddress(suggestion.description)
+    setSuggestions([])
+    setShowSuggestions(false)
+  }
 
   // Autocomplete query effect
   useEffect(() => {
+    if (isSelectionRef.current) {
+      isSelectionRef.current = false
+      setSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+
     if (!customLocAddress || customLocAddress.trim().length < 2) {
       setSuggestions([])
+      setShowSuggestions(false)
       return
     }
 
@@ -180,10 +196,12 @@ export default function ProfilePage() {
     const timeout = setTimeout(() => {
       fetchAddressSuggestions(customLocAddress)
         .then((res) => {
-          if (isMounted) {
+          if (isMounted && !isSelectionRef.current) {
             setSuggestions(res || [])
             if (res && res.length > 0) {
               setShowSuggestions(true)
+            } else {
+              setShowSuggestions(false)
             }
           }
         })
@@ -747,11 +765,14 @@ export default function ProfilePage() {
                           placeholder="e.g. 1122 NW River Street, Portland, OR 97209"
                           value={customLocAddress}
                           onChange={(e) => {
+                            isSelectionRef.current = false
                             setCustomLocAddress(e.target.value)
                             setShowSuggestions(true)
                           }}
                           onFocus={() => {
-                            if (suggestions.length > 0) setShowSuggestions(true)
+                            if (!isSelectionRef.current && suggestions.length > 0) {
+                              setShowSuggestions(true)
+                            }
                           }}
                           autoComplete="off"
                           required
@@ -763,6 +784,7 @@ export default function ProfilePage() {
                           <button
                             type="button"
                             onClick={() => {
+                              isSelectionRef.current = true
                               setCustomLocAddress("")
                               setSuggestions([])
                               setShowSuggestions(false)
@@ -785,16 +807,11 @@ export default function ProfilePage() {
                             className="autocomplete-item"
                             role="option"
                             tabIndex={0}
-                            onClick={() => {
-                              setCustomLocAddress(s.description)
-                              setSuggestions([])
-                              setShowSuggestions(false)
-                            }}
+                            onClick={() => handleSelectSuggestion(s)}
                             onKeyDown={(e) => {
                               if (e.key === "Enter" || e.key === " ") {
-                                setCustomLocAddress(s.description)
-                                setSuggestions([])
-                                setShowSuggestions(false)
+                                e.preventDefault()
+                                handleSelectSuggestion(s)
                               }
                             }}
                           >
