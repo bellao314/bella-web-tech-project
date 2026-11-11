@@ -7,8 +7,6 @@ import { useApiResource } from "../hooks/useApiResource"
 import { useAuth } from "../hooks/useAuth"
 import { useFavorites } from "../hooks/useFavorites"
 import {
-  PRESET_LOCATIONS,
-  PRESET_HOURS,
   getBusinessData,
   saveBusinessData,
 } from "../lib/business"
@@ -147,18 +145,9 @@ export default function ProfilePage() {
 
   // Business Location & Hours state
   const [businessData, setBusinessData] = useState(() => getBusinessData(name || "My Business"))
-  const [selectedLocPreset, setSelectedLocPreset] = useState(() => {
-    const b = getBusinessData(name || "My Business")
-    const match = PRESET_LOCATIONS.find((loc) => loc.name === b.locationName)
-    return match ? match.name : "custom"
-  })
   const [customLocAddress, setCustomLocAddress] = useState(() => {
     const b = getBusinessData(name || "My Business")
     return b.address || ""
-  })
-  const [selectedHoursPreset, setSelectedHoursPreset] = useState(() => {
-    const b = getBusinessData(name || "My Business")
-    return PRESET_HOURS.includes(b.hours) ? b.hours : "custom"
   })
   const [customHoursText, setCustomHoursText] = useState(() => {
     const b = getBusinessData(name || "My Business")
@@ -175,25 +164,6 @@ export default function ProfilePage() {
     return () => window.removeEventListener("businessDataUpdated", handleUpdate)
   }, [name])
 
-  const handleLocationPresetSelect = (e) => {
-    const val = e.target.value
-    setSelectedLocPreset(val)
-    if (val !== "custom") {
-      const preset = PRESET_LOCATIONS.find((loc) => loc.name === val)
-      if (preset) {
-        setCustomLocAddress(preset.address)
-      }
-    }
-  }
-
-  const handleHoursPresetSelect = (e) => {
-    const val = e.target.value
-    setSelectedHoursPreset(val)
-    if (val !== "custom") {
-      setCustomHoursText(val)
-    }
-  }
-
   const handleSaveBusinessLocationHours = (e) => {
     e.preventDefault()
 
@@ -205,9 +175,7 @@ export default function ProfilePage() {
       longitude: businessData.longitude || -90.1994,
     }
 
-    const chosenHours = selectedHoursPreset === "custom"
-      ? (customHoursText.trim() || "10:00 AM – 6:00 PM")
-      : selectedHoursPreset
+    const chosenHours = customHoursText.trim()
 
     const updated = saveBusinessData({
       name: name || businessData.name || "My Business",
@@ -553,72 +521,32 @@ export default function ProfilePage() {
 
                 <form onSubmit={handleSaveBusinessLocationHours} style={{ marginTop: "14px", display: "flex", flexDirection: "column", gap: "12px" }}>
                   <label style={{ display: "block" }}>
-                    <span style={{ display: "block", marginBottom: "6px", fontSize: "12px", fontWeight: 700 }}>Current Location</span>
+                    <span style={{ display: "block", marginBottom: "6px", fontSize: "12px", fontWeight: 700 }}>Location / Address</span>
                     <div className="input-shell">
-                      <Icon name="pin" size={18} />
-                      <select
-                        value={selectedLocPreset}
-                        onChange={handleLocationPresetSelect}
-                      >
-                        {PRESET_LOCATIONS.map((loc) => (
-                          <option key={loc.name} value={loc.name}>
-                            {loc.name} ({loc.city})
-                          </option>
-                        ))}
-                        <option value="custom">Custom Address / Place...</option>
-                      </select>
+                      <Icon name="location" size={18} />
+                      <input
+                        type="text"
+                        placeholder="e.g. 1122 NW River Street, Portland, OR"
+                        value={customLocAddress}
+                        onChange={(e) => setCustomLocAddress(e.target.value)}
+                        required
+                      />
                     </div>
                   </label>
-
-                  {selectedLocPreset === "custom" && (
-                    <label style={{ display: "block" }}>
-                      <span style={{ display: "block", marginBottom: "6px", fontSize: "12px", fontWeight: 700 }}>Custom Location / Address</span>
-                      <div className="input-shell">
-                        <Icon name="location" size={18} />
-                        <input
-                          type="text"
-                          placeholder="e.g. 1122 NW River Street, Portland, OR"
-                          value={customLocAddress}
-                          onChange={(e) => setCustomLocAddress(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </label>
-                  )}
 
                   <label style={{ display: "block" }}>
                     <span style={{ display: "block", marginBottom: "6px", fontSize: "12px", fontWeight: 700 }}>Operating Hours</span>
                     <div className="input-shell">
-                      <Icon name="sparkles" size={18} />
-                      <select
-                        value={selectedHoursPreset}
-                        onChange={handleHoursPresetSelect}
-                      >
-                        {PRESET_HOURS.map((h) => (
-                          <option key={h} value={h}>
-                            {h}
-                          </option>
-                        ))}
-                        <option value="custom">Custom Operating Hours...</option>
-                      </select>
+                      <Icon name="clock" size={18} />
+                      <input
+                        type="text"
+                        placeholder="e.g. 7:30 AM – 2:30 PM"
+                        value={customHoursText}
+                        onChange={(e) => setCustomHoursText(e.target.value)}
+                        required
+                      />
                     </div>
                   </label>
-
-                  {selectedHoursPreset === "custom" && (
-                    <label style={{ display: "block" }}>
-                      <span style={{ display: "block", marginBottom: "6px", fontSize: "12px", fontWeight: 700 }}>Custom Operating Hours</span>
-                      <div className="input-shell">
-                        <Icon name="settings" size={18} />
-                        <input
-                          type="text"
-                          placeholder="e.g. 7:30 AM – 2:30 PM"
-                          value={customHoursText}
-                          onChange={(e) => setCustomHoursText(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </label>
-                  )}
 
                   {saveMessage && (
                     <div
