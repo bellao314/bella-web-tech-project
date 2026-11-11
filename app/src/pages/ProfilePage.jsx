@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import Icon from "../components/Icon"
 import SettingsList from "../components/SettingsList"
@@ -9,6 +9,16 @@ import { useFavorites } from "../hooks/useFavorites"
 import {
   getBusinessData,
   saveBusinessData,
+  resetBusinessLocationHours,
+  geocodeLocation,
+  parseOperatingHours,
+  isBusinessLive,
+  isBusinessScheduled,
+  isBusinessExpired,
+  fetchAddressSuggestions,
+  toLocalDatetimeString,
+  formatDateTimeSingle,
+  formatScheduledHours,
 } from "../lib/business"
 
 const initials = (name) => {
@@ -147,45 +157,271 @@ export default function ProfilePage() {
   const [businessData, setBusinessData] = useState(() => getBusinessData(name || "My Business"))
   const [customLocAddress, setCustomLocAddress] = useState(() => {
     const b = getBusinessData(name || "My Business")
-    return b.address || ""
+    return isBusinessScheduled(b) ? (b.address || "") : ""
   })
-  const [customHoursText, setCustomHoursText] = useState(() => {
+  const [customStartDateTime, setCustomStartDateTime] = useState(() => {
     const b = getBusinessData(name || "My Business")
-    return b.hours || ""
+    if (isBusinessScheduled(b) && b.startTime) {
+      return toLocalDatetimeString(b.startTime)
+    }
+    return ""
+  })
+  const [customFinishDateTime, setCustomFinishDateTime] = useState(() => {
+    const b = getBusinessData(name || "My Business")
+    if (isBusinessScheduled(b) && b.expiresAt) {
+      return toLocalDatetimeString(b.expiresAt)
+    }
+    return ""
   })
   const [saveMessage, setSaveMessage] = useState("")
+  const [businessSaveError, setBusinessSaveError] = useState("")
+  const [isSavingBusiness, setIsSavingBusiness] = useState(false)
 
+  // Autocomplete state
+  const [suggestions, setSuggestions] = useState([])
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const autocompleteRef = useRef(null)
+
+  // Autocomplete query effect
+  useEffect(() => {
+    if (!customLocAddress || customLocAddress.trim().length < 2) {
+      setSuggestions([])
+      return
+    }
+
+    let isMounted = true
+    setIsLoadingSuggestions(true)
+    const timeout = setTimeout(() => {
+      fetchAddressSuggestions(customLocAddress)
+        .then((res) => {
+          if (isMounted) {
+            setSuggestions(res || [])
+            if (res && res.length > 0) {
+              setShowSuggestions(true)
+            }
+          }
+        })
+        .catch(() => {
+          if (isMounted) setSuggestions([])
+        })
+        .finally(() => {
+          if (isMounted) setIsLoadingSuggestions(false)
+        })
+    }, 250)
+
+    return () => {
+      isMounted = false
+      clearTimeout(timeout)
+    }
+  }, [customLocAddress])
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (autocompleteRef.current && !autocompleteRef.current.contains(e.target)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  // Listen for business data updates
   useEffect(() => {
     const handleUpdate = (e) => {
       const updated = e?.detail || getBusinessData(name || "My Business")
       setBusinessData(updated)
+      if (isBusinessScheduled(updated)) {
+        setCustomLocAddress(updated.address || "")
+        setCustomStartDateTime(toLocalDatetimeString(updated.startTime))
+        setCustomFinishDateTime(toLocalDatetimeString(updated.expiresAt))
+      } else {
+        setCustomLocAddress("")
+        setCustomStartDateTime("")
+        setCustomFinishDateTime("")
+      }
     }
     window.addEventListener("businessDataUpdated", handleUpdate)
     return () => window.removeEventListener("businessDataUpdated", handleUpdate)
   }, [name])
 
-  const handleSaveBusinessLocationHours = (e) => {
-    e.preventDefault()
+  // Timer to watch for schedule start and expiration
+  useEffect(() => {
+    if (!businessData || !isBusinessScheduled(businessData)) return
 
-    let chosenLocation = {
-      locationName: customLocAddress.split(",")[0]?.trim() || "Primary Location",
-      address: customLocAddress.trim() || "Current Location",
-      city: customLocAddress.split(",").slice(1).join(",").trim() || "Local Area",
-      latitude: businessData.latitude || 38.6270,
-      longitude: businessData.longitude || -90.1994,
+    if (isBusinessExpired(businessData)) {
+      resetBusinessLocationHours(name || "My Business")
+      setCustomLocAddress("")
+      setCustomStartDateTime("")
+      setCustomFinishDateTime("")
+      return
     }
 
-    const chosenHours = customHoursText.trim()
+    const expTime = businessData.expiresAt
+      ? new Date(businessData.expiresAt).getTime()
+      : parseOperatingHours(businessData.hours)?.endDate?.getTime()
 
+    const startTime = businessData.startTime
+      ? new Date(businessData.startTime).getTime()
+      : null
+
+    const timers = []
+
+    if (startTime && startTime > Date.now()) {
+      const startDiff = startTime - Date.now()
+      const startTimer = setTimeout(() => {
+        setBusinessData(getBusinessData(name || "My Business"))
+      }, Math.min(startDiff, 2147483647))
+      timers.push(startTimer)
+    }
+
+    if (expTime) {
+      const diff = expTime - Date.now()
+      if (diff <= 0) {
+        resetBusinessLocationHours(name || "My Business")
+        setCustomLocAddress("")
+        setCustomStartDateTime("")
+        setCustomFinishDateTime("")
+      } else {
+        const timerId = setTimeout(() => {
+          resetBusinessLocationHours(name || "My Business")
+          setCustomLocAddress("")
+          setCustomStartDateTime("")
+          setCustomFinishDateTime("")
+          setSaveMessage("Operating hours have ended. Location and hours have been reset, and pin removed from the map.")
+          setTimeout(() => setSaveMessage(""), 5000)
+        }, Math.min(diff, 2147483647))
+
+        timers.push(timerId)
+      }
+    }
+
+    return () => timers.forEach((t) => clearTimeout(t))
+  }, [businessData, name])
+
+  const handleSaveBusinessLocationHours = async (e) => {
+    e.preventDefault()
+    setIsSavingBusiness(true)
+    setBusinessSaveError("")
+    setSaveMessage("")
+    setShowSuggestions(false)
+
+    const cleanAddress = customLocAddress.trim()
+
+    if (!cleanAddress) {
+      setBusinessSaveError("Please enter a location or address.")
+      setIsSavingBusiness(false)
+      return
+    }
+
+    if (!customStartDateTime) {
+      setBusinessSaveError("Please select a start date and time.")
+      setIsSavingBusiness(false)
+      return
+    }
+
+    if (!customFinishDateTime) {
+      setBusinessSaveError("Please select a finish date and time.")
+      setIsSavingBusiness(false)
+      return
+    }
+
+    const startDate = new Date(customStartDateTime)
+    const finishDate = new Date(customFinishDateTime)
+
+    if (isNaN(startDate.getTime())) {
+      setBusinessSaveError("Please select a valid start date and time.")
+      setIsSavingBusiness(false)
+      return
+    }
+
+    if (isNaN(finishDate.getTime())) {
+      setBusinessSaveError("Please select a valid finish date and time.")
+      setIsSavingBusiness(false)
+      return
+    }
+
+    if (finishDate.getTime() <= startDate.getTime()) {
+      setBusinessSaveError("Finish time must be after the start time.")
+      setIsSavingBusiness(false)
+      return
+    }
+
+    // If finish date/time has already passed:
+    if (finishDate.getTime() <= Date.now()) {
+      resetBusinessLocationHours(name || "My Business")
+      setCustomLocAddress("")
+      setCustomStartDateTime("")
+      setCustomFinishDateTime("")
+      setBusinessSaveError("The finish date and time has already passed. Location and hours have been reset.")
+      setIsSavingBusiness(false)
+      return
+    }
+
+    // Geocode location
+    let geo = null
+    try {
+      geo = await geocodeLocation(cleanAddress)
+    } catch (err) {
+      setBusinessSaveError(err.message || "Failed to find coordinates for this address.")
+      setIsSavingBusiness(false)
+      return
+    }
+
+    if (!geo || !Number.isFinite(geo.lat) || !Number.isFinite(geo.lng)) {
+      setBusinessSaveError(`Could not find coordinates for "${cleanAddress}". Please check the address.`)
+      setIsSavingBusiness(false)
+      return
+    }
+
+    const lat = geo.lat
+    const lng = geo.lng
+    const city = geo.city || cleanAddress.split(",").slice(1).join(",").trim() || "Local Area"
+    const locationName = cleanAddress.split(",")[0]?.trim() || "Primary Location"
+    const displayHours = formatScheduledHours(startDate, finishDate)
+
+    // Save business data
     const updated = saveBusinessData({
       name: name || businessData.name || "My Business",
-      ...chosenLocation,
-      hours: chosenHours,
+      locationName,
+      address: geo.formattedAddress || cleanAddress,
+      city,
+      latitude: lat,
+      longitude: lng,
+      hours: displayHours,
+      startTime: startDate.toISOString(),
+      expiresAt: finishDate.toISOString(),
+      isLive: true,
     })
 
+    // Update backend profile if authenticated
+    if (token) {
+      try {
+        await putApi("/user/profile", {
+          city,
+          latitude: lat,
+          longitude: lng,
+        })
+      } catch {
+        // Backend update optional
+      }
+    }
+
     setBusinessData(updated)
-    setSaveMessage("Location and hours updated! Changes are now live on the map and details page.")
-    setTimeout(() => setSaveMessage(""), 4500)
+    setSaveMessage(`Location and operating hours scheduled! The map view will now center here.`)
+    setTimeout(() => setSaveMessage(""), 5000)
+    setIsSavingBusiness(false)
+  }
+
+  const handleResetBusinessLocation = () => {
+    resetBusinessLocationHours(name || "My Business")
+    setCustomLocAddress("")
+    setCustomStartDateTime("")
+    setCustomFinishDateTime("")
+    setBusinessSaveError("")
+    setSaveMessage("Location and hours have been reset. Pin removed from map.")
+    setTimeout(() => setSaveMessage(""), 4000)
   }
 
   const handleSignOut = () => {
@@ -490,11 +726,11 @@ export default function ProfilePage() {
           {/* BUSINESS VIEW: Live Status and Location & Hours Input Section */}
           {isBusiness && (
             <>
-              <section className="business-status">
-                <span><Icon name="check" size={16} /></span>
+              <section className={`business-status ${isBusinessLive(businessData) ? "live" : isBusinessScheduled(businessData) ? "scheduled" : "offline"}`}>
+                <span><Icon name={isBusinessLive(businessData) ? "check" : "clock"} size={16} /></span>
                 <div>
-                  <h4>Your business is live</h4>
-                  <p>Visible to customers nearby on the map</p>
+                  <h4>{isBusinessLive(businessData) ? "Your business is live" : isBusinessScheduled(businessData) ? "Operating hours scheduled" : "Location not active"}</h4>
+                  <p>{isBusinessLive(businessData) ? "Visible to customers nearby on the map" : isBusinessScheduled(businessData) ? `Scheduled to go live on the map at ${formatDateTimeSingle(businessData.startTime)}` : "Set location and hours below to appear on the map"}</p>
                 </div>
               </section>
 
@@ -505,41 +741,152 @@ export default function ProfilePage() {
 
                 <div className="info-row">
                   <span>Current location</span>
-                  <strong>{businessData.address || businessData.locationName}</strong>
+                  <strong>{isBusinessScheduled(businessData) && (businessData.address || businessData.locationName) ? (businessData.address || businessData.locationName) : "Not set"}</strong>
                 </div>
                 <div className="info-row">
-                  <span>Hours today</span>
-                  <strong>{businessData.hours}</strong>
+                  <span>Start time</span>
+                  <strong>{isBusinessScheduled(businessData) && businessData.startTime ? formatDateTimeSingle(businessData.startTime) : "Not set"}</strong>
+                </div>
+                <div className="info-row">
+                  <span>Finish time</span>
+                  <strong>{isBusinessScheduled(businessData) && businessData.expiresAt ? formatDateTimeSingle(businessData.expiresAt) : "Not set"}</strong>
+                </div>
+                <div className="info-row">
+                  <span>Operating hours</span>
+                  <strong>{isBusinessScheduled(businessData) && (businessData.hours || (businessData.startTime && businessData.expiresAt)) ? (businessData.hours || formatScheduledHours(businessData.startTime, businessData.expiresAt)) : "Not set"}</strong>
                 </div>
 
                 <form onSubmit={handleSaveBusinessLocationHours} style={{ marginTop: "14px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <label style={{ display: "block" }}>
-                    <span style={{ display: "block", marginBottom: "6px", fontSize: "12px", fontWeight: 700 }}>Location / Address</span>
-                    <div className="input-shell">
-                      <Icon name="location" size={18} />
-                      <input
-                        type="text"
-                        placeholder="e.g. 1122 NW River Street, Portland, OR"
-                        value={customLocAddress}
-                        onChange={(e) => setCustomLocAddress(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </label>
+                  <div style={{ position: "relative" }} ref={autocompleteRef}>
+                    <label htmlFor="businessLocationInput" style={{ display: "block" }}>
+                      <span style={{ display: "block", marginBottom: "6px", fontSize: "12px", fontWeight: 700 }}>Location / Address</span>
+                      <div className="input-shell">
+                        <Icon name="location" size={18} />
+                        <input
+                          id="businessLocationInput"
+                          name="location"
+                          type="text"
+                          placeholder="e.g. 1122 NW River Street, Portland, OR 97209"
+                          value={customLocAddress}
+                          onChange={(e) => {
+                            setCustomLocAddress(e.target.value)
+                            setShowSuggestions(true)
+                          }}
+                          onFocus={() => {
+                            if (suggestions.length > 0) setShowSuggestions(true)
+                          }}
+                          autoComplete="off"
+                          required
+                        />
+                        {isLoadingSuggestions && (
+                          <span style={{ fontSize: "11px", color: "var(--muted)", marginRight: "4px" }}>...</span>
+                        )}
+                        {customLocAddress && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCustomLocAddress("")
+                              setSuggestions([])
+                              setShowSuggestions(false)
+                            }}
+                            className="clear-input-btn"
+                            title="Clear address input"
+                            aria-label="Clear address input"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    </label>
 
-                  <label style={{ display: "block" }}>
-                    <span style={{ display: "block", marginBottom: "6px", fontSize: "12px", fontWeight: 700 }}>Operating Hours</span>
-                    <div className="input-shell">
-                      <Icon name="clock" size={18} />
-                      <input
-                        type="text"
-                        placeholder="e.g. 7:30 AM – 2:30 PM"
-                        value={customHoursText}
-                        onChange={(e) => setCustomHoursText(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </label>
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div className="autocomplete-dropdown" role="listbox">
+                        {suggestions.map((s) => (
+                          <div
+                            key={s.id}
+                            className="autocomplete-item"
+                            role="option"
+                            tabIndex={0}
+                            onClick={() => {
+                              setCustomLocAddress(s.description)
+                              setSuggestions([])
+                              setShowSuggestions(false)
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                setCustomLocAddress(s.description)
+                                setSuggestions([])
+                                setShowSuggestions(false)
+                              }
+                            }}
+                          >
+                            <Icon name="pin" size={14} color="var(--forest)" />
+                            <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                              <strong>{s.mainText}</strong>
+                              {s.secondaryText && <span>{s.secondaryText}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="hours-grid">
+                    <label htmlFor="businessStartTimeInput" style={{ display: "block" }}>
+                      <span style={{ display: "block", marginBottom: "6px", fontSize: "12px", fontWeight: 700 }}>Start Time</span>
+                      <div className="input-shell">
+                        <Icon name="clock" size={18} />
+                        <input
+                          id="businessStartTimeInput"
+                          name="startTime"
+                          type="datetime-local"
+                          aria-label="Start time"
+                          value={customStartDateTime}
+                          onChange={(e) => setCustomStartDateTime(e.target.value)}
+                          required
+                        />
+                        {customStartDateTime && (
+                          <button
+                            type="button"
+                            onClick={() => setCustomStartDateTime("")}
+                            className="clear-input-btn"
+                            title="Clear start time"
+                            aria-label="Clear start time"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    </label>
+
+                    <label htmlFor="businessFinishTimeInput" style={{ display: "block" }}>
+                      <span style={{ display: "block", marginBottom: "6px", fontSize: "12px", fontWeight: 700 }}>Finish Time</span>
+                      <div className="input-shell">
+                        <Icon name="clock" size={18} />
+                        <input
+                          id="businessFinishTimeInput"
+                          name="finishTime"
+                          type="datetime-local"
+                          aria-label="Finish time"
+                          value={customFinishDateTime}
+                          onChange={(e) => setCustomFinishDateTime(e.target.value)}
+                          min={customStartDateTime || undefined}
+                          required
+                        />
+                        {customFinishDateTime && (
+                          <button
+                            type="button"
+                            onClick={() => setCustomFinishDateTime("")}
+                            className="clear-input-btn"
+                            title="Clear finish time"
+                            aria-label="Clear finish time"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    </label>
+                  </div>
 
                   {saveMessage && (
                     <div
@@ -559,14 +906,73 @@ export default function ProfilePage() {
                     </div>
                   )}
 
+                  {businessSaveError && (
+                    <div
+                      style={{
+                        padding: "9px 12px",
+                        borderRadius: "10px",
+                        background: "#ffe3e3",
+                        color: "#c92a2a",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {businessSaveError}
+                    </div>
+                  )}
+
                   <div style={{ display: "flex", gap: "9px", marginTop: "2px" }}>
                     <button
                       type="submit"
                       className="primary-button"
+                      disabled={isSavingBusiness}
                       style={{ flex: 1, minHeight: "44px", fontSize: "12px" }}
                     >
-                      Save Location & Hours <Icon name="check" size={16} />
+                      {isSavingBusiness ? "Saving..." : "Save Location & Hours"} <Icon name="check" size={16} />
                     </button>
+                    {isBusinessScheduled(businessData) && (
+                      <button
+                        type="button"
+                        onClick={handleResetBusinessLocation}
+                        style={{
+                          padding: "0 14px",
+                          border: "1px solid var(--line)",
+                          borderRadius: "13px",
+                          background: "white",
+                          color: "#c92a2a",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          minHeight: "44px",
+                        }}
+                        title="Reset location and hours"
+                      >
+                        Reset
+                      </button>
+                    )}
+                    {isBusinessScheduled(businessData) && (
+                      <button
+                        type="button"
+                        onClick={() => navigate("/")}
+                        style={{
+                          padding: "0 14px",
+                          border: "1px solid var(--line)",
+                          borderRadius: "13px",
+                          background: "white",
+                          color: "var(--forest)",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          minHeight: "44px",
+                        }}
+                        title="View on map"
+                      >
+                        <Icon name="map" size={16} /> Map
+                      </button>
+                    )}
                   </div>
                 </form>
               </section>

@@ -45,6 +45,7 @@ const VendorMarkers = ({
     <>
       {vendors.map((vendor) => {
         const isSelected = String(vendor.id) === String(selectedVendorId);
+        const isMyBusiness = String(vendor.id) === 'my-business';
         return (
           <AdvancedMarker
             key={vendor.id}
@@ -53,10 +54,10 @@ const VendorMarkers = ({
             onClick={() => handleMarkerClick(vendor)}
           >
             <Pin
-              background={isSelected ? '#9c88c0' : 'var(--forest)'}
+              background={isSelected ? '#9c88c0' : isMyBusiness ? '#422e65' : 'var(--forest)'}
               glyphColor="#ffffff"
-              borderColor={isSelected ? 'var(--lime)' : 'var(--ink)'}
-              scale={isSelected ? 1.2 : 1.0}
+              borderColor={isSelected ? 'var(--lime)' : isMyBusiness ? 'var(--lime)' : 'var(--ink)'}
+              scale={isSelected || isMyBusiness ? 1.15 : 1.0}
             />
           </AdvancedMarker>
         );

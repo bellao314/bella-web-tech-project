@@ -180,8 +180,42 @@ async function handleUpdateProfile(req, res, next) {
 		await db.orm.public.User.where({ id: user.id }).update(updateData);
 
 		const updatedUser = await db.orm.public.User.where({ id: user.id }).first();
-		const favorites = await getUserFavorites(user.id);
 		const userType = updatedUser?.type || user.accountType || "customer";
+
+		if (userType === "business") {
+			try {
+				let vendor = await db.orm.public.Vendor.where({ email: user.email }).first();
+				if (!vendor && user.name) {
+					vendor = await db.orm.public.Vendor.where({ name: user.name }).first();
+				}
+				if (vendor) {
+					if (updateData.city !== undefined && updateData.city) {
+						await db.orm.public.Vendor.where({ id: vendor.id }).update({
+							city: updateData.city,
+						});
+					}
+					if (updateData.latitude != null && updateData.longitude != null) {
+						const existingLoc = await db.orm.public.Location.where({ vendorId: vendor.id }).first();
+						if (existingLoc) {
+							await db.orm.public.Location.where({ id: existingLoc.id }).update({
+								latitude: updateData.latitude,
+								longitude: updateData.longitude,
+							});
+						} else {
+							await db.orm.public.Location.create({
+								vendorId: vendor.id,
+								latitude: updateData.latitude,
+								longitude: updateData.longitude,
+							});
+						}
+					}
+				}
+			} catch (vendorErr) {
+				console.warn("Could not update vendor/location record:", vendorErr?.message);
+			}
+		}
+
+		const favorites = await getUserFavorites(user.id);
 
 		return res.json({
 			success: true,

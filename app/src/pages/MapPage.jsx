@@ -3,11 +3,18 @@ import { useNavigate } from "react-router-dom"
 import Icon from "../components/Icon"
 import MapView from "../components/MapView"
 import SearchBar from "../components/SearchBar"
-import { collectionFrom, vendorFrom, getApi } from "../lib/api"
+import { collectionFrom, vendorFrom, getApi, valueFrom } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
 import { useFavorites } from "../hooks/useFavorites"
 import { useAuth } from "../hooks/useAuth"
-import { getBusinessData } from "../lib/business"
+import {
+  getBusinessData,
+  isBusinessLive,
+  isBusinessScheduled,
+  isBusinessExpired,
+  resetBusinessLocationHours,
+  parseOperatingHours,
+} from "../lib/business"
 import { matchesVendorSearch } from "../lib/search"
 
 function isLocationInBounds(vendor, bounds) {
@@ -37,6 +44,9 @@ export default function MapPage() {
   const { token } = useAuth()
   const { data: profileData } = useApiResource(token ? "/user/profile" : null, null)
   const profile = profileData?.profile || profileData?.data || profileData
+  const apiAccountType = valueFrom(profile, ["type", "accountType", "account_type", "role"]) 
+  const accountType = (apiAccountType || localStorage.getItem("userAccountType") || "customer").toLowerCase()
+  const isBusiness = accountType === "business"
 
   const [updatedLocation, setUpdatedLocation] = useState(null)
 
@@ -81,7 +91,69 @@ export default function MapPage() {
     }
   }, [profile])
 
+  const [businessData, setBusinessData] = useState(() => getBusinessData())
+
+  useEffect(() => {
+    const handleUpdate = (e) => setBusinessData(e?.detail || getBusinessData())
+    window.addEventListener("businessDataUpdated", handleUpdate)
+    return () => window.removeEventListener("businessDataUpdated", handleUpdate)
+  }, [])
+
+  // Timer to watch for business hours start and expiration while on the map
+  useEffect(() => {
+    if (!businessData || !isBusinessScheduled(businessData)) return
+
+    if (isBusinessExpired(businessData)) {
+      resetBusinessLocationHours()
+      return
+    }
+
+    const expTime = businessData.expiresAt
+      ? new Date(businessData.expiresAt).getTime()
+      : parseOperatingHours(businessData.hours)?.endDate?.getTime()
+
+    const startTime = businessData.startTime
+      ? new Date(businessData.startTime).getTime()
+      : null
+
+    const timers = []
+
+    if (startTime && startTime > Date.now()) {
+      const startDiff = startTime - Date.now()
+      const startTimer = setTimeout(() => {
+        setBusinessData(getBusinessData())
+      }, Math.min(startDiff, 2147483647))
+      timers.push(startTimer)
+    }
+
+    if (expTime) {
+      const diff = expTime - Date.now()
+      if (diff <= 0) {
+        resetBusinessLocationHours()
+      } else {
+        const timerId = setTimeout(() => {
+          resetBusinessLocationHours()
+        }, Math.min(diff, 2147483647))
+        timers.push(timerId)
+      }
+    }
+
+    return () => timers.forEach((t) => clearTimeout(t))
+  }, [businessData])
+
   const userLocation = useMemo(() => {
+    // If business has an active location and operating hours, center the map there
+    if (businessData && isBusinessScheduled(businessData)) {
+      const bLat = Number(businessData.latitude)
+      const bLng = Number(businessData.longitude)
+      if (Number.isFinite(bLat) && Number.isFinite(bLng)) {
+        return {
+          city: businessData.city || businessData.address,
+          coords: { lat: bLat, lng: bLng },
+        }
+      }
+    }
+
     if (updatedLocation) {
       return updatedLocation
     }
@@ -126,19 +198,17 @@ export default function MapPage() {
       coords = null
     }
     return { city, coords }
-  }, [updatedLocation, profile])
-
-  const [businessData, setBusinessData] = useState(() => getBusinessData())
-
-  useEffect(() => {
-    const handleUpdate = (e) => setBusinessData(e?.detail || getBusinessData())
-    window.addEventListener("businessDataUpdated", handleUpdate)
-    return () => window.removeEventListener("businessDataUpdated", handleUpdate)
-  }, [])
+  }, [businessData, updatedLocation, profile])
 
   const vendors = useMemo(() => {
     const list = collectionFrom(data, ["vendors"]).map(vendorFrom)
-    if (!businessData) return list
+    if (!businessData || !isBusinessLive(businessData)) return list
+
+    const lat = Number(businessData.latitude)
+    const lng = Number(businessData.longitude)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return list
+    }
 
     const businessVendor = vendorFrom({
       id: businessData.id || "my-business",
@@ -147,14 +217,10 @@ export default function MapPage() {
       city: businessData.city || businessData.locationName,
       address: businessData.address || businessData.locationName,
       hours: businessData.hours,
-      latitude: Number(businessData.latitude),
-      longitude: Number(businessData.longitude),
+      latitude: lat,
+      longitude: lng,
       distance: "0.1 mi",
     })
-
-    if (!Number.isFinite(businessVendor.latitude) || !Number.isFinite(businessVendor.longitude)) {
-      return list
-    }
 
     const existingIndex = list.findIndex(
       (v) => String(v.id) === String(businessVendor.id) || v.name?.toLowerCase() === businessVendor.name?.toLowerCase()
@@ -311,23 +377,25 @@ export default function MapPage() {
                       </small>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    className={`vendor-fav-btn ${isFav ? "is-favorite" : ""}`}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      toggleFavorite(vendor)
-                    }}
-                    aria-label={isFav ? `Remove ${vendor.name} from favorites` : `Add ${vendor.name} to favorites`}
-                    title={isFav ? "Favorited" : "Add to favorites"}
-                  >
-                    <Icon
-                      name="heart"
-                      size={18}
-                      fill={isFav ? "#e11d48" : "none"}
-                      color={isFav ? "#e11d48" : "currentColor"}
-                    />
-                  </button>
+                  {!isBusiness && (
+                    <button
+                      type="button"
+                      className={`vendor-fav-btn ${isFav ? "is-favorite" : ""}`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleFavorite(vendor)
+                      }}
+                      aria-label={isFav ? `Remove ${vendor.name} from favorites` : `Add ${vendor.name} to favorites`}
+                      title={isFav ? "Favorited" : "Add to favorites"}
+                    >
+                      <Icon
+                        name="heart"
+                        size={18}
+                        fill={isFav ? "#e11d48" : "none"}
+                        color={isFav ? "#e11d48" : "currentColor"}
+                      />
+                    </button>
+                  )}
                   <div className="chevron-icon">
                     <Icon name="chevron" size={17} />
                   </div>
