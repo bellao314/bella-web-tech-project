@@ -244,7 +244,7 @@ export default function ProfilePage() {
             type="button"
             onClick={handleSignOut}
             style={{
-              margin: "6px 22px 24px",
+              margin: "10px 0 5px",
               width: "80px",
               padding: "10px",
               borderRadius: "14px",
@@ -673,19 +673,17 @@ export default function ProfilePage() {
             </>
           )}
 
-          <SettingsList
-            items={
-              isBusiness
-                ? [
-                    ["View business details page", "briefcase", () => navigate("/vendor/my-business")],
-                    ["View live pin on map", "map", () => navigate("/")],
-                    ["Drop or move map pin", "pin", () => navigate("/pin")],
-                  ]
-                : [
-
+          {isBusiness && (
+            <SettingsList
+              items={
+                [
+                  ["View business details page", "briefcase", () => navigate("/vendor/my-business")],
+                  ["View live pin on map", "map", () => navigate("/")],
+                  ["Drop or move map pin", "pin", () => navigate("/pin")],
                 ]
-            }
-          />
+              }
+            />
+          )}
         </>
       )}
     </main>
