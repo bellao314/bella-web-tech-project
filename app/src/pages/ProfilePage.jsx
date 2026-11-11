@@ -744,14 +744,6 @@ export default function ProfilePage() {
                   <strong>{isBusinessScheduled(businessData) && (businessData.address || businessData.locationName) ? (businessData.address || businessData.locationName) : "Not set"}</strong>
                 </div>
                 <div className="info-row">
-                  <span>Start time</span>
-                  <strong>{isBusinessScheduled(businessData) && businessData.startTime ? formatDateTimeSingle(businessData.startTime) : "Not set"}</strong>
-                </div>
-                <div className="info-row">
-                  <span>Finish time</span>
-                  <strong>{isBusinessScheduled(businessData) && businessData.expiresAt ? formatDateTimeSingle(businessData.expiresAt) : "Not set"}</strong>
-                </div>
-                <div className="info-row">
                   <span>Operating hours</span>
                   <strong>{isBusinessScheduled(businessData) && (businessData.hours || (businessData.startTime && businessData.expiresAt)) ? (businessData.hours || formatScheduledHours(businessData.startTime, businessData.expiresAt)) : "Not set"}</strong>
                 </div>
