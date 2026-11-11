@@ -8,6 +8,9 @@ import {
   Pin,
   InfoWindow,
 } from '@vis.gl/react-google-maps';
+import { valueFrom, getAuthToken } from "../lib/api"
+import { useApiResource } from "../hooks/useApiResource"
+import { useAuth } from "../hooks/useAuth"
 
 const VendorMarkers = ({
   vendors,
@@ -17,6 +20,14 @@ const VendorMarkers = ({
   onToggleFavorite,
 }) => {
   const map = useMap();
+
+  const { token: authToken } = useAuth()
+  const token = authToken || getAuthToken()
+  const { data } = useApiResource(token ? "/user/profile" : null, null)
+  const profile = data?.profile || data?.data || data
+  const apiAccountType = valueFrom(profile, ["type", "accountType", "account_type", "role"])
+  const accountType = (apiAccountType || localStorage.getItem("userAccountType") || "customer").toLowerCase()
+  const isBusiness = accountType === "business"
 
   const selectedVendor = useMemo(() => {
     if (!selectedVendorId) return null;
@@ -75,7 +86,7 @@ const VendorMarkers = ({
                 <div style={{ fontWeight: 700, fontSize: '13px', lineHeight: 1.25 }}>
                   {selectedVendor.name}
                 </div>
-                {onToggleFavorite && (
+                {onToggleFavorite && !isBusiness && (
                   <button
                     type="button"
                     onClick={(e) => {
