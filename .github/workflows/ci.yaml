@@ -1,77 +1,93 @@
 name: CI
 
 on:
-    push:
-        branches:
-            - main
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-    lint-api:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout Code
-              uses: actions/checkout@v3
+  lint-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-            - name: Set up Node.js
-              uses: actions/setup-node@v3
-              with:
-                node-version: "24"
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
 
-            - name: Install Backend Dependencies
-              working-directory: ./api
-              run: npm i
+      - name: Install Backend Dependencies
+        working-directory: ./api
+        run: npm i
 
-            - name: Run Backend Lint
-              working-directory: ./api
-              run: npm run lint
+      - name: Run Backend Lint
+        working-directory: ./api
+        run: npm run lint
 
-    lint-app:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout Code
-              uses: actions/checkout@v3
+  lint-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-            - name: Set up Node.js
-              uses: actions/setup-node@v3
-              with:
-                node-version: "24"
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
 
-            - name: Install frontend Dependencies
-              working-directory: ./app
-              run: npm i
+      - name: Install frontend Dependencies
+        working-directory: ./app
+        run: npm i
 
-            - name: Run frontend lint
-              working-directory: ./app
-              run: npm run lint
+      - name: Run frontend lint
+        working-directory: ./app
+        run: npm run lint
 
-    test:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout Code
-              uses: actions/checkout@v3
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: mobile_vendor_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-            - name: Set up Node.js
-              uses: actions/setup-node@v3
-              with:
-                node-version: "24"
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
 
-            - name: Install Dependencies
-              working-directory: ./api
-              run: npm i
+      - name: Install Dependencies
+        working-directory: ./api
+        run: npm i
 
-            - name: Run Integration Tests
-              working-directory: ./api
-              env:
-                DATABASE_URL: postgresql://bellaott@localhost:5432/mobile-vendor
-                JWT_SECRET: JWT_SECRET
-                BASE_URL: "http://localhost:5173"
-              run: npm run test
+      - name: Run Tests with Coverage
+        working-directory: ./api
+        env:
+          DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/mobile_vendor_test
+          JWT_SECRET: TEST_JWT_SECRET
+          BASE_URL: "http://localhost:5173"
+        run: npm run coverage
 
-            - name: Generate coverage report
-              working-directory: ./api
-              run: npx vitest run --coverage
-
-            - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v5
-              with:
-                token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: bellao314/bella-web-tech-project
+          files: ./api/coverage/coverage-final.json,./api/coverage/clover.xml
+          fail_ci_if_error: false
