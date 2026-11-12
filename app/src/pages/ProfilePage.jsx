@@ -216,6 +216,7 @@ export default function ProfilePage() {
     isSelectionRef.current = true
     setCustomLocAddress(suggestion.description)
     setSuggestions([])
+    setIsLoadingSuggestions(false)
     setShowSuggestions(false)
   }
 
@@ -228,14 +229,9 @@ export default function ProfilePage() {
       return
     }
 
-    if (!customLocAddress || customLocAddress.trim().length < 2) {
-      setSuggestions([])
-      setShowSuggestions(false)
-      return
-    }
+    if (!customLocAddress || customLocAddress.trim().length < 2) return
 
     let isMounted = true
-    setIsLoadingSuggestions(true)
     const timeout = setTimeout(() => {
       fetchAddressSuggestions(customLocAddress)
         .then((res) => {
@@ -293,11 +289,13 @@ export default function ProfilePage() {
     if (!businessData || !isBusinessScheduled(businessData)) return
 
     if (isBusinessExpired(businessData)) {
-      resetBusinessLocationHours(name || "My Business")
-      setCustomLocAddress("")
-      setCustomStartDateTime("")
-      setCustomFinishDateTime("")
-      return
+      const expirationTimer = setTimeout(() => {
+        resetBusinessLocationHours(name || "My Business")
+        setCustomLocAddress("")
+        setCustomStartDateTime("")
+        setCustomFinishDateTime("")
+      }, 0)
+      return () => clearTimeout(expirationTimer)
     }
 
     const expTime = businessData.expiresAt
@@ -321,10 +319,13 @@ export default function ProfilePage() {
     if (expTime) {
       const diff = expTime - Date.now()
       if (diff <= 0) {
-        resetBusinessLocationHours(name || "My Business")
-        setCustomLocAddress("")
-        setCustomStartDateTime("")
-        setCustomFinishDateTime("")
+        const expiredTimer = setTimeout(() => {
+          resetBusinessLocationHours(name || "My Business")
+          setCustomLocAddress("")
+          setCustomStartDateTime("")
+          setCustomFinishDateTime("")
+        }, 0)
+        timers.push(expiredTimer)
       } else {
         const timerId = setTimeout(() => {
           resetBusinessLocationHours(name || "My Business")
@@ -809,7 +810,9 @@ export default function ProfilePage() {
                           value={customLocAddress}
                           onChange={(e) => {
                             isSelectionRef.current = false
-                            setCustomLocAddress(e.target.value)
+                            const nextAddress = e.target.value
+                            setCustomLocAddress(nextAddress)
+                            setIsLoadingSuggestions(nextAddress.trim().length >= 2)
                             setShowSuggestions(true)
                           }}
                           onFocus={() => {
@@ -830,6 +833,7 @@ export default function ProfilePage() {
                               isSelectionRef.current = true
                               setCustomLocAddress("")
                               setSuggestions([])
+                              setIsLoadingSuggestions(false)
                               setShowSuggestions(false)
                             }}
                             className="clear-input-btn"
@@ -842,7 +846,7 @@ export default function ProfilePage() {
                       </div>
                     </label>
 
-                    {showSuggestions && suggestions.length > 0 && (
+                    {showSuggestions && customLocAddress.trim().length >= 2 && suggestions.length > 0 && (
                       <div className="autocomplete-dropdown" role="listbox">
                         {suggestions.map((s) => (
                           <div
