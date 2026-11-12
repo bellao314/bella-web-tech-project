@@ -18,7 +18,8 @@
     "start": "node index.js",
     "lint": "eslint .",
     "test": "node --test 'tests/**/*.test.js'",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "coverage": "npx vitest run --coverage"
   },
   "dependencies": {
     "@js-temporal/polyfill": "^0.5.1",
