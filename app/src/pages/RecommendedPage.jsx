@@ -7,6 +7,7 @@ import { useFavorites } from "../hooks/useFavorites"
 import { useAuth } from "../hooks/useAuth"
 import { calculateRecommendations, getCustomerLikedCategories } from "../lib/recommendations"
 import { matchesVendorSearch } from "../lib/search"
+import { getBusinessData } from "../lib/business"
 
 export default function RecommendedPage() {
   const navigate = useNavigate()
@@ -62,7 +63,25 @@ export default function RecommendedPage() {
 
   // Compute up to 6 recommended vendors weighted by proximity in miles and keyword categories
   const cards = useMemo(() => {
-    const rawList = collectionFrom(data, ["recommendations", "vendors"]).map(vendorFrom)
+    let rawList = collectionFrom(data, ["recommendations", "vendors"]).map(vendorFrom)
+
+    // Merge any locally stored business branding if present
+    const businessData = getBusinessData()
+    if (businessData && (businessData.logo || businessData.banner)) {
+      rawList = rawList.map((v) => {
+        if (
+          String(v.id) === String(businessData.id) ||
+          (v.name && businessData.name && v.name.toLowerCase() === businessData.name.toLowerCase())
+        ) {
+          return {
+            ...v,
+            logo: businessData.logo || v.logo,
+            banner: businessData.banner || v.banner,
+          }
+        }
+        return v
+      })
+    }
 
     // Run the recommendation algorithm focusing on keyword categories and proximity
     const recommended = calculateRecommendations({
@@ -140,6 +159,20 @@ export default function RecommendedPage() {
               }}
             >
               <div className="card-visual">
+                {card.banner ? (
+                  <img
+                    src={card.banner}
+                    alt={`${card.name || "Vendor"} banner`}
+                    className="card-banner-img"
+                  />
+                ) : (
+                  <div className="sketch-shape" />
+                )}
+                {card.logo && (
+                  <div className="recommend-card-logo">
+                    <img src={card.logo} alt={`${card.name || "Vendor"} logo`} />
+                  </div>
+                )}
                 <button
                   type="button"
                   className={isFav ? "is-favorite" : ""}
@@ -157,7 +190,6 @@ export default function RecommendedPage() {
                     color={isFav ? "#e11d48" : "currentColor"}
                   />
                 </button>
-                <div className="sketch-shape" />
               </div>
 
               <div className="card-body" style={{ flexDirection: "column", alignItems: "stretch", gap: "8px" }}>

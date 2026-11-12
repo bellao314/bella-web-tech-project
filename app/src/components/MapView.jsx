@@ -64,12 +64,46 @@ const VendorMarkers = ({
             clickable={true}
             onClick={() => handleMarkerClick(vendor)}
           >
-            <Pin
-              background={isSelected ? 'var(--muted)' : isMyBusiness ? 'var(--muted)' : 'var(--forest)'}
-              glyphColor="#ffffff"
-              borderColor={isSelected ? 'var(--forest)' : isMyBusiness ? 'var(--forest)' : 'var(--ink)'}
-              scale={isSelected || isMyBusiness ? 1.15 : 1.0}
-            />
+            {vendor.logo ? (
+              <div
+                className={`custom-map-pin ${isSelected ? 'selected' : ''} ${isMyBusiness ? 'my-business' : ''}`}
+                style={{
+                  width: isSelected || isMyBusiness ? '38px' : '32px',
+                  height: isSelected || isMyBusiness ? '38px' : '32px',
+                  borderRadius: '50%',
+                  border: isSelected
+                    ? '3px solid var(--forest)'
+                    : isMyBusiness
+                    ? '3px solid #166534'
+                    : '2px solid #ffffff',
+                  boxShadow: isSelected
+                    ? '0 0 0 2px #ffffff, 0 4px 10px rgba(0,0,0,0.35)'
+                    : '0 2px 8px rgba(0,0,0,0.25)',
+                  overflow: 'hidden',
+                  backgroundColor: '#ffffff',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transform: isSelected ? 'scale(1.1)' : 'scale(1.0)',
+                  transition: 'transform 0.2s ease, border-color 0.2s ease',
+                }}
+                title={vendor.name}
+              >
+                <img
+                  src={vendor.logo}
+                  alt={vendor.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+            ) : (
+              <Pin
+                background={isSelected ? 'var(--muted)' : isMyBusiness ? 'var(--muted)' : 'var(--forest)'}
+                glyphColor="#ffffff"
+                borderColor={isSelected ? 'var(--forest)' : isMyBusiness ? 'var(--forest)' : 'var(--ink)'}
+                scale={isSelected || isMyBusiness ? 1.15 : 1.0}
+              />
+            )}
           </AdvancedMarker>
         );
       })}
@@ -82,9 +116,25 @@ const VendorMarkers = ({
             onCloseClick={() => onSelectVendor?.(null)}
           >
             <div style={{ padding: '6px 8px', minWidth: '160px', color: '#1f2521', fontFamily: 'Inter, sans-serif' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '2px' }}>
-                <div style={{ fontWeight: 700, fontSize: '13px', lineHeight: 1.25 }}>
-                  {selectedVendor.name}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+                  {selectedVendor.logo && (
+                    <img
+                      src={selectedVendor.logo}
+                      alt={selectedVendor.name}
+                      style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '6px',
+                        objectFit: 'cover',
+                        flex: '0 0 auto',
+                        border: '1px solid var(--line)',
+                      }}
+                    />
+                  )}
+                  <div style={{ fontWeight: 700, fontSize: '13px', lineHeight: 1.25 }}>
+                    {selectedVendor.name}
+                  </div>
                 </div>
                 {onToggleFavorite && !isBusiness && (
                   <button

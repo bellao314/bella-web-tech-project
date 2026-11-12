@@ -608,5 +608,341 @@ input[type="datetime-local"] {
   user-select: none;
 }
 
+/* Vendor Thumb & Logo */
+.vendor-thumb {
+  position: relative;
+  overflow: hidden;
+}
+
+.vendor-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  display: block;
+}
+
+/* Recommendations Card Banner & Logo Badge */
+.card-banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.recommend-card-logo {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.22);
+  border: 2px solid white;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recommend-card-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Custom Google Map Pin with Logo */
+.custom-map-pin {
+  border-radius: 50%;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-map-pin img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Profile Avatar with Logo */
+.profile-avatar.has-logo {
+  padding: 0;
+  overflow: hidden;
+  background: white;
+  border: 1px solid var(--line);
+}
+
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Branding & Visuals Section on Profile Page */
+.branding-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.branding-card {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fdfdfc;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.branding-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.branding-card-header > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.branding-card-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.branding-card-header p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.branding-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.branding-badge.map-badge {
+  background: #e4efdc;
+  color: #2b5138;
+}
+
+.branding-badge.rec-badge {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
+.branding-preview-box {
+  background: #f4f5f1;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  position: relative;
+}
+
+.preview-label {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.logo-preview-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 6px 0;
+}
+
+.logo-preview-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.logo-preview-item span {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.preview-thumb {
+  width: 48px;
+  height: 48px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.map-pin-preview {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+}
+
+.custom-map-pin.preview-pin {
+  width: 36px;
+  height: 36px;
+  border: 2.5px solid var(--forest);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.default-map-pin {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--forest);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.banner-preview-frame {
+  height: 110px;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  background: #eadbd0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.banner-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.banner-placeholder span {
+  position: relative;
+  z-index: 1;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.banner-preview-heart {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  display: grid;
+  place-items: center;
+  z-index: 2;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.recommend-card-logo.preview-badge {
+  bottom: 8px;
+  left: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.branding-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.upload-file-button {
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--forest);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.upload-file-button:hover {
+  background: #1e3a2b;
+  transform: translateY(-1px);
+}
+
+.remove-image-button {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #fff1f2;
+  color: #e11d48;
+  border: 1px solid #fecdd3;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.remove-image-button:hover {
+  background: #ffe4e6;
+}
+
+.text-toggle-button {
+  border: 0;
+  background: none;
+  color: var(--forest);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  text-decoration: underline;
+}
+
+.image-url-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.primary-button.compact {
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 11px;
+}
+
+.branding-hint {
+  font-size: 10px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+
 
 

@@ -538,6 +538,8 @@ export function getInitialBusinessData(name = "My Business") {
     startTime: null,
     isLive: false,
     keywords: ["coffee", "beverage", "food"],
+    logo: null,
+    banner: null,
   };
 }
 
@@ -601,6 +603,8 @@ export function saveBusinessData(updates) {
     expiresAt,
     startTime,
     isLive: updates?.isLive ?? hasValidCoords,
+    logo: updates?.logo !== undefined ? updates.logo : (current.logo ?? null),
+    banner: updates?.banner !== undefined ? updates.banner : (current.banner ?? null),
     updatedAt: new Date().toISOString(),
   };
 
@@ -717,4 +721,58 @@ export function formatDistance(miles) {
   if (miles < 0.05) return "0.1 mi";
   return `${miles.toFixed(1)} mi`;
 }
+
+/**
+ * Validate an uploaded image file for vendor branding.
+ */
+export function validateImageFile(file, maxMb = 5) {
+  if (!file) {
+    return { valid: false, error: "No file selected." };
+  }
+  if (!file.type || !file.type.startsWith("image/")) {
+    return { valid: false, error: "Please select a valid image file (PNG, JPG, SVG, WebP, or GIF)." };
+  }
+  const maxBytes = maxMb * 1024 * 1024;
+  if (file.size > maxBytes) {
+    return { valid: false, error: `Image file is too large (max ${maxMb}MB). Please choose a smaller image.` };
+  }
+  return { valid: true };
+}
+
+/**
+ * Read a file as a data URL for client-side storage and preview.
+ */
+export function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const check = validateImageFile(file);
+    if (!check.valid) {
+      reject(new Error(check.error));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target?.result);
+    reader.onerror = () => reject(new Error("Failed to read image file."));
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * Save business branding images (logo for Map page and banner for Recommendations page).
+ */
+export function saveBusinessBranding({ logo, banner }, businessName = "My Business") {
+  const current = getBusinessData(businessName);
+  const updates = {};
+  if (logo !== undefined) updates.logo = logo;
+  if (banner !== undefined) updates.banner = banner;
+  return saveBusinessData({ ...current, ...updates });
+}
+
+/**
+ * Reset business branding images.
+ */
+export function resetBusinessBranding(businessName = "My Business") {
+  const current = getBusinessData(businessName);
+  return saveBusinessData({ ...current, logo: null, banner: null });
+}
+
 

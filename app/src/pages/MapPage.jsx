@@ -211,12 +211,29 @@ export default function MapPage() {
 
   const vendors = useMemo(() => {
     const list = collectionFrom(data, ["vendors"]).map(vendorFrom)
-    if (!businessData || !isBusinessLive(businessData)) return list
+    
+    // Apply local business branding to any matching vendor in list
+    const brandedList = list.map((v) => {
+      if (
+        businessData &&
+        (String(v.id) === String(businessData.id) ||
+          (v.name && businessData.name && v.name.toLowerCase() === businessData.name.toLowerCase()))
+      ) {
+        return {
+          ...v,
+          logo: businessData.logo || v.logo,
+          banner: businessData.banner || v.banner,
+        }
+      }
+      return v
+    })
+
+    if (!businessData || !isBusinessLive(businessData)) return brandedList
 
     const lat = Number(businessData.latitude)
     const lng = Number(businessData.longitude)
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-      return list
+      return brandedList
     }
 
     const businessVendor = vendorFrom({
@@ -229,23 +246,27 @@ export default function MapPage() {
       latitude: lat,
       longitude: lng,
       distance: null,
+      logo: businessData.logo || null,
+      banner: businessData.banner || null,
     })
 
-    const existingIndex = list.findIndex(
+    const existingIndex = brandedList.findIndex(
       (v) => String(v.id) === String(businessVendor.id) || v.name?.toLowerCase() === businessVendor.name?.toLowerCase()
     )
 
     if (existingIndex >= 0) {
-      const updated = [...list]
+      const updated = [...brandedList]
       updated[existingIndex] = {
         ...updated[existingIndex],
         ...businessVendor,
+        logo: businessData.logo || updated[existingIndex].logo,
+        banner: businessData.banner || updated[existingIndex].banner,
         id: updated[existingIndex].id,
       }
       return updated
     }
 
-    return [businessVendor, ...list]
+    return [businessVendor, ...brandedList]
   }, [data, businessData])
 
   const sortedVendors = useMemo(() => {
@@ -413,7 +434,13 @@ export default function MapPage() {
                     }
                   }}
                 >
-                  <div className="vendor-thumb">{vendor.name?.slice(0, 1).toUpperCase() || "?"}</div>
+                  <div className="vendor-thumb">
+                    {vendor.logo ? (
+                      <img src={vendor.logo} alt={vendor.name} className="vendor-thumb-img" />
+                    ) : (
+                      vendor.name?.slice(0, 1).toUpperCase() || "?"
+                    )}
+                  </div>
                   <div className="vendor-info">
                     <div>
                       <h4>{vendor.name}</h4>

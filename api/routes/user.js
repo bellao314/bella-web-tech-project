@@ -1,10 +1,11 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { db } from "../prisma/db.ts";
-import { formatVendor } from "./vendors.js";
+import { formatVendor, vendorBrandingStore } from "./vendors.js";
 import { geocodeAddress } from "../services/google-maps.service.js";
 
 const router = Router();
+export const userBrandingStore = new Map();
 
 export async function getUserFromRequest(req) {
 	const authorization = req.headers.authorization;
@@ -99,6 +100,9 @@ async function handleProfile(req, res, next) {
 
 		const favorites = await getUserFavorites(user.id);
 		const userType = user.type || user.accountType || "customer";
+		const userBranding = userBrandingStore.get(user.id) || (user.email ? userBrandingStore.get(user.email) : null) || {};
+		const userLogo = user.logo || userBranding.logo || null;
+		const userBanner = user.banner || userBranding.banner || null;
 
 		return res.json({
 			profile: {
@@ -110,6 +114,8 @@ async function handleProfile(req, res, next) {
 				city: user.city || null,
 				latitude: user.latitude != null ? Number(user.latitude) : null,
 				longitude: user.longitude != null ? Number(user.longitude) : null,
+				logo: userLogo,
+				banner: userBanner,
 				createdAt: user.createdAt,
 				updatedAt: user.updatedAt,
 				favorites,
@@ -132,10 +138,21 @@ async function handleUpdateProfile(req, res, next) {
 			return res.status(401).json({ error: "Authentication is required." });
 		}
 
-		const { city, name } = req.body || {};
+		const { city, name, logo, banner } = req.body || {};
 		const updateData = {
 			updatedAt: new Date(),
 		};
+
+		if (logo !== undefined || banner !== undefined) {
+			const existingBranding = userBrandingStore.get(user.id) || (user.email ? userBrandingStore.get(user.email) : null) || {};
+			const updatedBranding = {
+				...existingBranding,
+				...(logo !== undefined ? { logo: typeof logo === "string" ? logo : null } : {}),
+				...(banner !== undefined ? { banner: typeof banner === "string" ? banner : null } : {}),
+			};
+			userBrandingStore.set(user.id, updatedBranding);
+			if (user.email) userBrandingStore.set(user.email, updatedBranding);
+		}
 
 		if (name !== undefined) {
 			updateData.name = typeof name === "string" ? name.trim() : null;
@@ -182,13 +199,21 @@ async function handleUpdateProfile(req, res, next) {
 		const updatedUser = await db.orm.public.User.where({ id: user.id }).first();
 		const userType = updatedUser?.type || user.accountType || "customer";
 
-		if (userType === "business") {
+		if (userType === "business" || userType === "vendor") {
 			try {
 				let vendor = await db.orm.public.Vendor.where({ email: user.email }).first();
 				if (!vendor && user.name) {
 					vendor = await db.orm.public.Vendor.where({ name: user.name }).first();
 				}
 				if (vendor) {
+					if (logo !== undefined || banner !== undefined) {
+						const vBranding = vendorBrandingStore.get(Number(vendor.id)) || {};
+						vendorBrandingStore.set(Number(vendor.id), {
+							...vBranding,
+							...(logo !== undefined ? { logo: typeof logo === "string" ? logo : null } : {}),
+							...(banner !== undefined ? { banner: typeof banner === "string" ? banner : null } : {}),
+						});
+					}
 					if (updateData.city !== undefined && updateData.city) {
 						await db.orm.public.Vendor.where({ id: vendor.id }).update({
 							city: updateData.city,
@@ -216,6 +241,7 @@ async function handleUpdateProfile(req, res, next) {
 		}
 
 		const favorites = await getUserFavorites(user.id);
+		const currentBranding = userBrandingStore.get(user.id) || (user.email ? userBrandingStore.get(user.email) : null) || {};
 
 		return res.json({
 			success: true,
@@ -228,6 +254,8 @@ async function handleUpdateProfile(req, res, next) {
 				city: updatedUser.city || null,
 				latitude: updatedUser.latitude != null ? Number(updatedUser.latitude) : null,
 				longitude: updatedUser.longitude != null ? Number(updatedUser.longitude) : null,
+				logo: currentBranding.logo ?? null,
+				banner: currentBranding.banner ?? null,
 				createdAt: updatedUser.createdAt,
 				updatedAt: updatedUser.updatedAt,
 				favorites,

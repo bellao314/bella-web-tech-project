@@ -17,7 +17,7 @@
     "dev": "nodemon index.js",
     "start": "node index.js",
     "lint": "eslint .",
-    "test": "node --test 'tests/**/*.test.js'",
+    "test": "vitest run",
     "seed": "tsx prisma/seed.ts",
     "coverage": "npx vitest run --coverage"
   },

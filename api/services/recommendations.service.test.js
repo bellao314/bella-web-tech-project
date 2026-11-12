@@ -1,10 +1,10 @@
-import test from "node:test";
+import { test } from "vitest";
 import assert from "node:assert/strict";
 import {
   calculateRecommendations,
   getVendorCategories,
   getCustomerLikedCategories,
-} from "./recommendations.service.js";
+} from "../services/recommendations.service.js";
 
 test("getVendorCategories resolves correct keyword categories", () => {
   const crochetVendor = {

@@ -37,8 +37,13 @@ const CITY_COORDINATES = {
   "Farmington, MO": { lat: 37.7801, lng: -90.4218 },
 };
 
+export const vendorBrandingStore = new Map();
+
 export function formatVendor(vendor, userCoords = null) {
   const id = Number(vendor.id);
+  const storedBranding = vendorBrandingStore.get(id) || {};
+  const logo = vendor.logo || vendor.logoUrl || storedBranding.logo || null;
+  const banner = vendor.banner || vendor.bannerUrl || vendor.headerImage || storedBranding.banner || null;
   const base = CITY_COORDINATES[vendor.city] || { lat: 38.6270, lng: -90.1994 };
   const latOffset = (((id * 17) % 40) - 20) * 0.0012;
   const lngOffset = (((id * 31) % 40) - 20) * 0.0012;
@@ -71,6 +76,8 @@ export function formatVendor(vendor, userCoords = null) {
     email: vendor.email,
     phone: vendor.phone,
     website: vendor.website,
+    logo,
+    banner,
     latitude: lat,
     longitude: lng,
     location: {
@@ -144,6 +151,46 @@ router.get("/:id", async (req, res, next) => {
     }
 
     return res.json({ vendor: formatVendor(rawVendor) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /api/vendors/:id/branding - Update vendor branding (logo & banner)
+router.put("/:id/branding", async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      return res.status(400).json({ error: "Invalid vendor ID." });
+    }
+    const { logo, banner } = req.body || {};
+    const existing = vendorBrandingStore.get(id) || {};
+    const updated = {
+      ...existing,
+      ...(logo !== undefined ? { logo: typeof logo === "string" ? logo : null } : {}),
+      ...(banner !== undefined ? { banner: typeof banner === "string" ? banner : null } : {}),
+    };
+    vendorBrandingStore.set(id, updated);
+
+    return res.json({
+      success: true,
+      vendorId: id,
+      branding: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/vendors/:id/branding - Get vendor branding
+router.get("/:id/branding", async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      return res.status(400).json({ error: "Invalid vendor ID." });
+    }
+    const branding = vendorBrandingStore.get(id) || { logo: null, banner: null };
+    return res.json({ vendorId: id, ...branding });
   } catch (error) {
     next(error);
   }

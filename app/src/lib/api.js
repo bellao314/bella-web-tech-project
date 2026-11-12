@@ -35,6 +35,8 @@ export function vendorFrom(record) {
     distance: valueFrom(record, ["distance", "distanceText"], null),
     latitude: Number.isFinite(latitude) ? latitude : null,
     longitude: Number.isFinite(longitude) ? longitude : null,
+    logo: valueFrom(record, ["logo", "logoUrl", "logo_url", "avatar"], null),
+    banner: valueFrom(record, ["banner", "bannerUrl", "banner_url", "headerImage", "header_image"], null),
   }
 }
 

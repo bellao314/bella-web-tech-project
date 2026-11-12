@@ -20,6 +20,8 @@ import {
   calculateDistanceInMiles,
   formatDistance,
   setStoredAccountType,
+  readFileAsDataUrl,
+  validateImageFile,
 } from "../lib/business"
 import {
   getVendorCategories,
@@ -284,6 +286,154 @@ export default function ProfilePage() {
     setTimeout(() => setKeywordSaveMessage(""), 5000)
   }
 
+  // Business Branding (Logo for Map, Banner for Recommendations)
+  const [vendorLogo, setVendorLogo] = useState(() => businessData?.logo || "")
+  const [vendorBanner, setVendorBanner] = useState(() => businessData?.banner || "")
+  const [logoInputUrl, setLogoInputUrl] = useState("")
+  const [bannerInputUrl, setBannerInputUrl] = useState("")
+  const [showLogoUrlInput, setShowLogoUrlInput] = useState(false)
+  const [showBannerUrlInput, setShowBannerUrlInput] = useState(false)
+  const [isSavingBranding, setIsSavingBranding] = useState(false)
+  const [brandingMessage, setBrandingMessage] = useState("")
+  const [brandingError, setBrandingError] = useState("")
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const validation = validateImageFile(file)
+    if (!validation.valid) {
+      setBrandingError(validation.error)
+      return
+    }
+    setBrandingError("")
+    setBrandingMessage("")
+    try {
+      const dataUrl = await readFileAsDataUrl(file)
+      setVendorLogo(dataUrl)
+      const updated = saveBusinessData({ logo: dataUrl })
+      setBusinessData(updated)
+      if (token) {
+        putApi("/user/profile", { logo: dataUrl }).catch(() => {})
+      }
+      setBrandingMessage("Logo uploaded successfully! Active on the Map page.")
+      setTimeout(() => setBrandingMessage(""), 5000)
+    } catch (err) {
+      setBrandingError(err.message || "Failed to load logo image.")
+    } finally {
+      e.target.value = ""
+    }
+  }
+
+  const handleRemoveLogo = () => {
+    setVendorLogo("")
+    const updated = saveBusinessData({ logo: null })
+    setBusinessData(updated)
+    if (token) {
+      putApi("/user/profile", { logo: null }).catch(() => {})
+    }
+    setBrandingMessage("Logo removed.")
+    setBrandingError("")
+    setTimeout(() => setBrandingMessage(""), 4000)
+  }
+
+  const handleApplyLogoUrl = (e) => {
+    e.preventDefault()
+    const clean = logoInputUrl.trim()
+    if (!clean) return
+    setVendorLogo(clean)
+    const updated = saveBusinessData({ logo: clean })
+    setBusinessData(updated)
+    if (token) {
+      putApi("/user/profile", { logo: clean }).catch(() => {})
+    }
+    setLogoInputUrl("")
+    setShowLogoUrlInput(false)
+    setBrandingMessage("Logo URL applied! Active on the Map page.")
+    setBrandingError("")
+    setTimeout(() => setBrandingMessage(""), 5000)
+  }
+
+  const handleBannerUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const validation = validateImageFile(file)
+    if (!validation.valid) {
+      setBrandingError(validation.error)
+      return
+    }
+    setBrandingError("")
+    setBrandingMessage("")
+    try {
+      const dataUrl = await readFileAsDataUrl(file)
+      setVendorBanner(dataUrl)
+      const updated = saveBusinessData({ banner: dataUrl })
+      setBusinessData(updated)
+      if (token) {
+        putApi("/user/profile", { banner: dataUrl }).catch(() => {})
+      }
+      setBrandingMessage("Banner uploaded successfully! Active on the Recommendations page.")
+      setTimeout(() => setBrandingMessage(""), 5000)
+    } catch (err) {
+      setBrandingError(err.message || "Failed to load banner image.")
+    } finally {
+      e.target.value = ""
+    }
+  }
+
+  const handleRemoveBanner = () => {
+    setVendorBanner("")
+    const updated = saveBusinessData({ banner: null })
+    setBusinessData(updated)
+    if (token) {
+      putApi("/user/profile", { banner: null }).catch(() => {})
+    }
+    setBrandingMessage("Banner removed.")
+    setBrandingError("")
+    setTimeout(() => setBrandingMessage(""), 4000)
+  }
+
+  const handleApplyBannerUrl = (e) => {
+    e.preventDefault()
+    const clean = bannerInputUrl.trim()
+    if (!clean) return
+    setVendorBanner(clean)
+    const updated = saveBusinessData({ banner: clean })
+    setBusinessData(updated)
+    if (token) {
+      putApi("/user/profile", { banner: clean }).catch(() => {})
+    }
+    setBannerInputUrl("")
+    setShowBannerUrlInput(false)
+    setBrandingMessage("Banner URL applied! Active on the Recommendations page.")
+    setBrandingError("")
+    setTimeout(() => setBrandingMessage(""), 5000)
+  }
+
+  const handleSaveBranding = async () => {
+    setIsSavingBranding(true)
+    setBrandingError("")
+    setBrandingMessage("")
+    try {
+      const updated = saveBusinessData({
+        logo: vendorLogo || null,
+        banner: vendorBanner || null,
+      })
+      setBusinessData(updated)
+      if (token) {
+        await putApi("/user/profile", {
+          logo: vendorLogo || null,
+          banner: vendorBanner || null,
+        })
+      }
+      setBrandingMessage("Branding saved! Your logo is live on the Map page and banner on Recommendations.")
+      setTimeout(() => setBrandingMessage(""), 5000)
+    } catch (err) {
+      setBrandingError(err.message || "Failed to save branding to server.")
+    } finally {
+      setIsSavingBranding(false)
+    }
+  }
+
   // Active keyword categories mapped from vendor's selected profile keywords
   const activeBusinessCategories = useMemo(() => {
     return getVendorCategories({
@@ -371,6 +521,12 @@ export default function ProfilePage() {
       setBusinessData(updated)
       if (Array.isArray(updated?.keywords)) {
         setVendorKeywords(updated.keywords)
+      }
+      if (updated?.logo !== undefined) {
+        setVendorLogo(updated.logo || "")
+      }
+      if (updated?.banner !== undefined) {
+        setVendorBanner(updated.banner || "")
       }
       if (!isBusinessScheduled(updated)) {
         setCustomLocAddress("")
@@ -673,7 +829,13 @@ export default function ProfilePage() {
       {profile && (
         <>
           <section className="profile-card">
-            <div className="profile-avatar">{initials(name || email) || "?"}</div>
+            {isBusiness && vendorLogo ? (
+              <div className="profile-avatar has-logo">
+                <img src={vendorLogo} alt={name || "Business"} className="profile-avatar-img" />
+              </div>
+            ) : (
+              <div className="profile-avatar">{initials(name || email) || "?"}</div>
+            )}
             <div>
               <h3>{name || email || (isBusiness ? "Unnamed Business" : "Unnamed user")}</h3>
               {email && <p>{email}</p>}
@@ -1165,6 +1327,271 @@ export default function ProfilePage() {
                     )}
                   </div>
                 </form>
+              </section>
+
+              {/* BUSINESS VIEW: Branding & Visuals (Logo for Map & Banner for Recommendations) */}
+              <section className="profile-section">
+                <div className="section-heading">
+                  <h3>Branding & Visuals</h3>
+                  {(vendorLogo || vendorBanner) && (
+                    <span style={{ fontSize: "11px", color: "var(--forest)", fontWeight: "600" }}>
+                      {[vendorLogo && "Logo", vendorBanner && "Banner"].filter(Boolean).join(" & ")} active
+                    </span>
+                  )}
+                </div>
+                <p style={{ margin: "0 0 16px", color: "var(--muted)", fontSize: "12px", lineHeight: 1.45 }}>
+                  Customize how your business appears to customers. Upload your <strong>brand logo for the Map page</strong> and a <strong>header banner for the Recommendations page</strong>.
+                </p>
+
+                {brandingMessage && (
+                  <div
+                    style={{
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      background: "#e4efdc",
+                      color: "#2b5138",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    <Icon name="check" size={16} /> {brandingMessage}
+                  </div>
+                )}
+
+                {brandingError && (
+                  <div
+                    style={{
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      background: "#fde8e8",
+                      color: "#991b1b",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    <Icon name="clock" size={16} /> {brandingError}
+                  </div>
+                )}
+
+                <div className="branding-cards-grid">
+                  {/* CARD 1: Logo for Map Page */}
+                  <div className="branding-card">
+                    <div className="branding-card-header">
+                      <div>
+                        <h4>Map Page Logo</h4>
+                        <span className="branding-badge map-badge">Map Page</span>
+                      </div>
+                      <p>Featured in the map vendor list and on your custom map marker pin.</p>
+                    </div>
+
+                    <div className="branding-preview-box">
+                      <div className="logo-preview-row">
+                        {/* Vendor list thumbnail preview */}
+                        <div className="logo-preview-item">
+                          <div className="vendor-thumb preview-thumb">
+                            {vendorLogo ? (
+                              <img src={vendorLogo} alt="Logo preview" className="vendor-thumb-img" />
+                            ) : (
+                              (name || "B").slice(0, 1).toUpperCase()
+                            )}
+                          </div>
+                          <span>List view</span>
+                        </div>
+
+                        {/* Map pin marker preview */}
+                        <div className="logo-preview-item">
+                          <div className="map-pin-preview">
+                            {vendorLogo ? (
+                              <div className="custom-map-pin preview-pin">
+                                <img src={vendorLogo} alt="Pin preview" />
+                              </div>
+                            ) : (
+                              <div className="default-map-pin">
+                                <Icon name="pin" size={20} color="#ffffff" fill="var(--forest)" />
+                              </div>
+                            )}
+                          </div>
+                          <span>Map pin</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="branding-actions">
+                      <label className="upload-file-button" htmlFor="logoFileInput">
+                        <Icon name="upload" size={15} />
+                        <span>{vendorLogo ? "Change Logo" : "Upload Logo"}</span>
+                        <input
+                          id="logoFileInput"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          style={{ display: "none" }}
+                        />
+                      </label>
+
+                      {vendorLogo && (
+                        <button
+                          type="button"
+                          className="remove-image-button"
+                          onClick={handleRemoveLogo}
+                          title="Remove logo"
+                        >
+                          <Icon name="trash" size={15} /> Remove
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        className="text-toggle-button"
+                        onClick={() => setShowLogoUrlInput(!showLogoUrlInput)}
+                      >
+                        {showLogoUrlInput ? "Hide URL" : "Or use URL"}
+                      </button>
+                    </div>
+
+                    {showLogoUrlInput && (
+                      <form onSubmit={handleApplyLogoUrl} className="image-url-form">
+                        <div className="input-shell" style={{ flex: 1 }}>
+                          <input
+                            type="url"
+                            placeholder="https://example.com/logo.png"
+                            value={logoInputUrl}
+                            onChange={(e) => setLogoInputUrl(e.target.value)}
+                          />
+                        </div>
+                        <button type="submit" className="primary-button compact" disabled={!logoInputUrl.trim()}>
+                          Apply
+                        </button>
+                      </form>
+                    )}
+
+                    <span className="branding-hint">Recommended: Square format (PNG, JPG, SVG, WebP, max 5MB)</span>
+                  </div>
+
+                  {/* CARD 2: Banner/Header for Recommendations Page */}
+                  <div className="branding-card">
+                    <div className="branding-card-header">
+                      <div>
+                        <h4>Recommendations Banner</h4>
+                        <span className="branding-badge rec-badge">Recommendations Page</span>
+                      </div>
+                      <p>Featured as the top header visual for your card on the Recommendations page.</p>
+                    </div>
+
+                    <div className="branding-preview-box">
+                      <div className="banner-preview-frame">
+                        {vendorBanner ? (
+                          <img src={vendorBanner} alt="Banner preview" className="card-banner-img" />
+                        ) : (
+                          <div className="banner-placeholder">
+                            <div className="sketch-shape" style={{ opacity: 0.6 }} />
+                            <span>Default pattern (No banner)</span>
+                          </div>
+                        )}
+                        <div className="banner-preview-heart">
+                          <Icon name="heart" size={15} fill="#e11d48" color="#e11d48" />
+                        </div>
+                        {vendorLogo && (
+                          <div className="recommend-card-logo preview-badge">
+                            <img src={vendorLogo} alt="Logo badge preview" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="branding-actions">
+                      <label className="upload-file-button" htmlFor="bannerFileInput">
+                        <Icon name="upload" size={15} />
+                        <span>{vendorBanner ? "Change Banner" : "Upload Banner"}</span>
+                        <input
+                          id="bannerFileInput"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleBannerUpload}
+                          style={{ display: "none" }}
+                        />
+                      </label>
+
+                      {vendorBanner && (
+                        <button
+                          type="button"
+                          className="remove-image-button"
+                          onClick={handleRemoveBanner}
+                          title="Remove banner"
+                        >
+                          <Icon name="trash" size={15} /> Remove
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        className="text-toggle-button"
+                        onClick={() => setShowBannerUrlInput(!showBannerUrlInput)}
+                      >
+                        {showBannerUrlInput ? "Hide URL" : "Or use URL"}
+                      </button>
+                    </div>
+
+                    {showBannerUrlInput && (
+                      <form onSubmit={handleApplyBannerUrl} className="image-url-form">
+                        <div className="input-shell" style={{ flex: 1 }}>
+                          <input
+                            type="url"
+                            placeholder="https://example.com/banner.jpg"
+                            value={bannerInputUrl}
+                            onChange={(e) => setBannerInputUrl(e.target.value)}
+                          />
+                        </div>
+                        <button type="submit" className="primary-button compact" disabled={!bannerInputUrl.trim()}>
+                          Apply
+                        </button>
+                      </form>
+                    )}
+
+                    <span className="branding-hint">Recommended: Landscape format (~16:9, PNG, JPG, WebP, max 5MB)</span>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={handleSaveBranding}
+                    disabled={isSavingBranding}
+                    style={{ flex: 1, minHeight: "44px", fontSize: "12px" }}
+                  >
+                    {isSavingBranding ? "Saving Branding..." : "Save Branding Images"} <Icon name="check" size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/")}
+                    style={{
+                      padding: "0 14px",
+                      borderRadius: "13px",
+                      background: "white",
+                      color: "var(--forest)",
+                      border: "1.5px solid var(--line)",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      minHeight: "44px",
+                    }}
+                    title="View on map"
+                  >
+                    <Icon name="map" size={16} /> Map
+                  </button>
+                </div>
               </section>
 
               {/* BUSINESS VIEW: Profile Keywords & Categories Selection */}

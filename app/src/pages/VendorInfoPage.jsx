@@ -39,6 +39,8 @@ export default function VendorInfoPage() {
         latitude: businessData.latitude,
         longitude: businessData.longitude,
         keywords: businessData.keywords,
+        logo: businessData.logo || null,
+        banner: businessData.banner || null,
       })
     } else if (data) {
       const v = vendorFrom(data.vendor || data.data || data)
@@ -53,6 +55,8 @@ export default function VendorInfoPage() {
           latitude: businessData.latitude || v.latitude,
           longitude: businessData.longitude || v.longitude,
           keywords,
+          logo: businessData.logo || v.logo,
+          banner: businessData.banner || v.banner,
         }
       } else {
         result = {
@@ -72,6 +76,8 @@ export default function VendorInfoPage() {
         latitude: businessData.latitude,
         longitude: businessData.longitude,
         keywords: businessData.keywords,
+        logo: businessData.logo || null,
+        banner: businessData.banner || null,
       })
     }
 
@@ -142,8 +148,23 @@ export default function VendorInfoPage() {
 
       {vendor && (
         <>
+          {vendor.banner && (
+            <div className="vendor-banner-header" style={{ margin: "0 22px 14px", borderRadius: "16px", overflow: "hidden", height: "140px", position: "relative" }}>
+              <img src={vendor.banner} alt={`${vendor.name} banner`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <div style={{ position: "absolute", bottom: "8px", right: "12px", background: "rgba(0,0,0,0.55)", color: "#ffffff", padding: "2px 8px", borderRadius: "6px", fontSize: "10px", fontWeight: 600 }}>
+                Recommendations Banner
+              </div>
+            </div>
+          )}
+
           <section className="profile-card">
-            <div className="profile-avatar">{vendor.name?.slice(0, 1).toUpperCase() || "?"}</div>
+            {vendor.logo ? (
+              <div className="profile-avatar has-logo">
+                <img src={vendor.logo} alt={vendor.name} className="profile-avatar-img" />
+              </div>
+            ) : (
+              <div className="profile-avatar">{vendor.name?.slice(0, 1).toUpperCase() || "?"}</div>
+            )}
             <div style={{ flex: 1, minWidth: 0 }}>
               <h3>{vendor.name || "Unnamed vendor"}</h3>
               <p>{[vendor.type, vendor.city || vendor.address].filter(Boolean).join(" · ")}</p>
@@ -191,6 +212,23 @@ export default function VendorInfoPage() {
                   <strong>{String(value)}</strong>
                 </div>
               ))}
+
+            {isMyBusiness && (
+              <>
+                <div className="info-row">
+                  <span>Map page logo</span>
+                  <strong style={{ color: vendor.logo ? "var(--forest)" : "var(--muted)" }}>
+                    {vendor.logo ? "Uploaded ✓" : "Not uploaded"}
+                  </strong>
+                </div>
+                <div className="info-row">
+                  <span>Recommendations banner</span>
+                  <strong style={{ color: vendor.banner ? "var(--forest)" : "var(--muted)" }}>
+                    {vendor.banner ? "Uploaded ✓" : "Not uploaded"}
+                  </strong>
+                </div>
+              </>
+            )}
 
             {Array.isArray(vendor.categories) && vendor.categories.length > 0 && (
               <div style={{ marginTop: "12px", paddingTop: "10px", borderTop: "1px solid var(--line)" }}>
