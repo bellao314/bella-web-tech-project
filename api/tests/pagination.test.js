@@ -1,10 +1,10 @@
-import test from "node:test";
+import { test } from "vitest";
 import assert from "node:assert/strict";
 import {
   FAVORITES_PER_PAGE,
   paginateItems,
   getPaginationPageNumbers,
-} from "./pagination.js";
+} from "../util/pagination.js";
 
 test("FAVORITES_PER_PAGE constant is set to 5", () => {
   assert.equal(FAVORITES_PER_PAGE, 5);
@@ -102,15 +102,15 @@ test("getPaginationPageNumbers returns all page numbers when totalPages <= 5", (
   assert.deepEqual(getPaginationPageNumbers(2, 5), [1, 2, 3, 4, 5]);
 });
 
-test("getPaginationPageNumbers returns pages with ellipsis when totalPages > 5", () => {
+test("getPaginationPageNumbers collapses with ellipsis for larger page counts", () => {
   // Near start
-  assert.deepEqual(getPaginationPageNumbers(1, 8), [1, 2, 3, "...", 8]);
-  assert.deepEqual(getPaginationPageNumbers(3, 8), [1, 2, 3, "...", 8]);
-
-  // In middle
-  assert.deepEqual(getPaginationPageNumbers(4, 8), [1, "...", 4, "...", 8]);
+  assert.deepEqual(getPaginationPageNumbers(1, 10), [1, 2, 3, "...", 10]);
+  assert.deepEqual(getPaginationPageNumbers(3, 10), [1, 2, 3, "...", 10]);
 
   // Near end
-  assert.deepEqual(getPaginationPageNumbers(6, 8), [1, "...", 6, 7, 8]);
-  assert.deepEqual(getPaginationPageNumbers(8, 8), [1, "...", 6, 7, 8]);
+  assert.deepEqual(getPaginationPageNumbers(8, 10), [1, "...", 8, 9, 10]);
+  assert.deepEqual(getPaginationPageNumbers(10, 10), [1, "...", 8, 9, 10]);
+
+  // In middle
+  assert.deepEqual(getPaginationPageNumbers(5, 10), [1, "...", 5, "...", 10]);
 });

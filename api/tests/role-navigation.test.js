@@ -1,41 +1,11 @@
-import test from "node:test";
+import { test } from "vitest";
 import assert from "node:assert/strict";
-
-function getNavItems(isVendor) {
-  return [
-    { path: "/map", icon: "map", label: "Explore" },
-    isVendor
-      ? { path: "/vendor/my-business", icon: "briefcase", label: "Business" }
-      : { path: "/recommended", icon: "sparkles", label: "For you" },
-    { path: "/profile", icon: "user", label: "Account" },
-  ];
-}
-
-function resolveUserRole({ token, user, storedRole }) {
-  const raw = user?.accountType || user?.type || storedRole || "customer";
-  const accountType = String(raw).toLowerCase();
-  const isAuthenticated = Boolean(token);
-  const isVendor = isAuthenticated && (accountType === "business" || accountType === "vendor");
-  const isCustomer = !isVendor;
-  return { isAuthenticated, accountType, isVendor, isCustomer };
-}
-
-function getRecommendedRedirect(isVendor) {
-  if (isVendor) {
-    return "/vendor/my-business";
-  }
-  return null;
-}
-
-function getVendorBusinessRedirect({ isMyBusiness, isAuthenticated, isVendor }) {
-  if (isMyBusiness && isAuthenticated && !isVendor) {
-    return "/recommended";
-  }
-  if (isMyBusiness && !isAuthenticated) {
-    return "/";
-  }
-  return null;
-}
+import {
+  getNavItems,
+  resolveUserRole,
+  getRecommendedRedirect,
+  getVendorBusinessRedirect,
+} from "../util/role-navigation.js";
 
 test("Customer receives For You recommendations tab", () => {
   const roleInfo = resolveUserRole({
