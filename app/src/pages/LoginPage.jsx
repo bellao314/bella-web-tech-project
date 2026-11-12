@@ -15,7 +15,6 @@ export default function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -61,7 +60,7 @@ export default function LoginPage({ onLoginSuccess }) {
         if (data.user?.accountType) {
           setStoredAccountType(data.user.accountType)
         }
-        login(data.token, rememberMe)
+        login(data.token)
         if (onLoginSuccess) {
           onLoginSuccess(data)
         } else {
@@ -154,14 +153,19 @@ export default function LoginPage({ onLoginSuccess }) {
           </>
         )}
 
-        <div className="vendor-pic-container ratio ratio-16x9 d-lg-none">
-          <img className="vendor-pic" src={vendorPic} alt="Vendor Image by Kampus Production" />
-          <div className="vendor-pic-overlay" aria-hidden="true" />
-        </div>
-        <div className="vendor-pic-container ratio ratio-21x9 d-none d-lg-block">
-          <img className="vendor-pic" src={vendorPic} alt="Vendor Image by Kampus Production" />
-          <div className="vendor-pic-overlay" aria-hidden="true" />
-        </div>
+        {!isSignUp && (
+          <>
+            <div className="vendor-pic-container ratio ratio-16x9 d-lg-none">
+              <img className="vendor-pic" src={vendorPic} alt="Vendor Image by Kampus Production" />
+              <div className="vendor-pic-overlay" aria-hidden="true" />
+            </div>
+            <div className="vendor-pic-container ratio ratio-21x9 d-none d-lg-block">
+              <img className="vendor-pic" src={vendorPic} alt="Vendor Image by Kampus Production" />
+              <div className="vendor-pic-overlay" aria-hidden="true" />
+            </div>
+          </>
+        )}
+        
 
         <label>
           <span>Email address</span>
@@ -209,14 +213,6 @@ export default function LoginPage({ onLoginSuccess }) {
 
         {!isSignUp && (
           <div className="form-helper">
-            <label className="remember">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-              />
-              <span>Remember me</span>
-            </label>
             <button type="button" className="text-button">Forgot password?</button>
           </div>
         )}

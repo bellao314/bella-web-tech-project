@@ -37,8 +37,8 @@ export function useAuth() {
     }
   }, [])
 
-  const login = useCallback((newToken, rememberMe = false) => {
-    setAuthToken(newToken, rememberMe)
+  const login = useCallback((newToken) => {
+    setAuthToken(newToken)
     setToken(getAuthToken())
     setStoredRole(getStoredAccountType("customer"))
   }, [])

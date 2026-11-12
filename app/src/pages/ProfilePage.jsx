@@ -24,6 +24,11 @@ import {
 import {
   getVendorCategories,
 } from "../lib/recommendations"
+import {
+  paginateItems,
+  getPaginationPageNumbers,
+  FAVORITES_PER_PAGE,
+} from "../lib/pagination"
 
 const POPULAR_KEYWORDS = [
   "crochet", "mexican", "coffee", "tacos", "bbq", "donuts",
@@ -212,6 +217,17 @@ export default function ProfilePage() {
       }
     })
   }, [favorites, userCoords])
+
+  // Customer Favorites Pagination state (5 vendors per page)
+  const [favoritesPage, setFavoritesPage] = useState(1)
+
+  const pagination = useMemo(() => {
+    return paginateItems(favoritesWithDistance, favoritesPage, FAVORITES_PER_PAGE)
+  }, [favoritesWithDistance, favoritesPage])
+
+  const pageNumbers = useMemo(() => {
+    return getPaginationPageNumbers(pagination.currentPage, pagination.totalPages)
+  }, [pagination.currentPage, pagination.totalPages])
 
   // Business Profile Keywords state
   const [vendorKeywords, setVendorKeywords] = useState(() => {
@@ -807,46 +823,96 @@ export default function ProfilePage() {
                 {favoritesWithDistance.length > 0 && (
                   <span style={{ fontSize: "11px", color: "var(--muted)", fontWeight: "600" }}>
                     {favoritesWithDistance.length} saved
+                    {pagination.totalPages > 1 && ` · Page ${pagination.currentPage} of ${pagination.totalPages}`}
                   </span>
                 )}
               </div>
-              {favoritesWithDistance.length ? (
-                favoritesWithDistance.map((vendor, index) => (
-                  <div
-                    className="mini-vendor"
-                    key={vendor.id || vendor.name || index}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => {
-                      if (vendor.id) {
-                        navigate(`/vendor/${encodeURIComponent(vendor.id)}`)
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if ((e.key === "Enter" || e.key === " ") && vendor.id) {
-                        navigate(`/vendor/${encodeURIComponent(vendor.id)}`)
-                      }
-                    }}
-                  >
-                    <div className="mini-thumb">{vendor.name?.slice(0, 1).toUpperCase() || "?"}</div>
-                    <div>
-                      <h4>{vendor.name || "Unnamed vendor"}</h4>
-                      <p>{[vendor.type, vendor.distance || vendor.city].filter(Boolean).join(" · ")}</p>
-                    </div>
-                    <button
-                      type="button"
-                      className="mini-fav-btn"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        removeFavorite(vendor.id)
+              {pagination.items.length ? (
+                <>
+                  {pagination.items.map((vendor, index) => (
+                    <div
+                      className="mini-vendor"
+                      key={vendor.id || vendor.name || index}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => {
+                        if (vendor.id) {
+                          navigate(`/vendor/${encodeURIComponent(vendor.id)}`)
+                        }
                       }}
-                      aria-label={`Remove ${vendor.name} from favorites`}
-                      title="Remove from favorites"
+                      onKeyDown={(e) => {
+                        if ((e.key === "Enter" || e.key === " ") && vendor.id) {
+                          navigate(`/vendor/${encodeURIComponent(vendor.id)}`)
+                        }
+                      }}
                     >
-                      <Icon name="heart" size={18} fill="#e11d48" color="#e11d48" />
-                    </button>
-                  </div>
-                ))
+                      <div className="mini-thumb">{vendor.name?.slice(0, 1).toUpperCase() || "?"}</div>
+                      <div>
+                        <h4>{vendor.name || "Unnamed vendor"}</h4>
+                        <p>{[vendor.type, vendor.distance || vendor.city].filter(Boolean).join(" · ")}</p>
+                      </div>
+                      <button
+                        type="button"
+                        className="mini-fav-btn"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          removeFavorite(vendor.id)
+                        }}
+                        aria-label={`Remove ${vendor.name} from favorites`}
+                        title="Remove from favorites"
+                      >
+                        <Icon name="heart" size={18} fill="#e11d48" color="#e11d48" />
+                      </button>
+                    </div>
+                  ))}
+
+                  {pagination.totalPages > 1 && (
+                    <div className="favorites-pagination" aria-label="Favorites pagination">
+                      <button
+                        type="button"
+                        className="pagination-btn"
+                        onClick={() => setFavoritesPage(Math.max(1, pagination.currentPage - 1))}
+                        disabled={!pagination.hasPrevPage}
+                        aria-label="Previous page"
+                      >
+                        <Icon name="chevron-left" size={14} />
+                        <span>Prev</span>
+                      </button>
+
+                      <div className="pagination-pages">
+                        {pageNumbers.map((p, idx) =>
+                          p === "..." ? (
+                            <span key={`ellipsis-${idx}`} className="pagination-ellipsis">
+                              …
+                            </span>
+                          ) : (
+                            <button
+                              key={`page-${p}`}
+                              type="button"
+                              className={`pagination-page-btn ${p === pagination.currentPage ? "active" : ""}`}
+                              onClick={() => setFavoritesPage(p)}
+                              aria-label={`Go to page ${p}`}
+                              aria-current={p === pagination.currentPage ? "page" : undefined}
+                            >
+                              {p}
+                            </button>
+                          )
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="pagination-btn"
+                        onClick={() => setFavoritesPage(Math.min(pagination.totalPages, pagination.currentPage + 1))}
+                        disabled={!pagination.hasNextPage}
+                        aria-label="Next page"
+                      >
+                        <span>Next</span>
+                        <Icon name="chevron-right" size={14} />
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <p className="empty-state">No favorites yet.</p>
               )}
