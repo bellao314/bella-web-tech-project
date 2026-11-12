@@ -2,6 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { db } from "../prisma/db.ts";
+// import postmark from "postmark";
 
 const router = Router();
 
@@ -30,6 +31,8 @@ router.post("/", async (req, res, next) => {
       { expiresIn: "1h" }
     );
 
+    // const client = new postmark.ServerClient(process.env.POSTMARK_API_KEY);
+
     const baseUrl = process.env.BASE_URL || "http://localhost:5173";
     const resetLink = `${baseUrl}/reset?reset_tok=${resetToken}`;
 
@@ -37,6 +40,17 @@ router.post("/", async (req, res, next) => {
       type: "USER_PASSWORD_CHANGE",
       userId: user.id,
     });
+
+    // await client.sendEmail({
+    //     From: '"CoreDesk Notifications" <coredesk@jackcrane.rocks>',
+    //     To: email,
+    //     Subject: "Reset Your CoreDesk Password",
+    //     HtmlBody: `
+    //         <p>Click below to reset your password:</p>
+    //         <a href="${resetLink}">${resetLink}</a>
+    //     `,
+    //     MessageStream: "outbound",
+    // });
 
     return res.status(200).json({
       success: true,
