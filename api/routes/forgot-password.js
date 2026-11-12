@@ -42,9 +42,9 @@ router.post("/", async (req, res, next) => {
     });
 
     // await client.sendEmail({
-    //     From: '"CoreDesk Notifications" <coredesk@jackcrane.rocks>',
+    //     From: '"Mobile Vendor Finder Notifications" <help@mobilevendorfinder.com>',
     //     To: email,
-    //     Subject: "Reset Your CoreDesk Password",
+    //     Subject: "Reset Your Password",
     //     HtmlBody: `
     //         <p>Click below to reset your password:</p>
     //         <a href="${resetLink}">${resetLink}</a>
