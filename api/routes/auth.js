@@ -51,7 +51,7 @@ async function handleLogin(req, res, next) {
         city: user.city || null,
       },
       jwtSecret,
-      { expiresIn: "24h" }
+      { expiresIn: "4h" }
     );
 
     return res.status(200).json({
@@ -128,7 +128,7 @@ router.post("/register", async (req, res, next) => {
         city: user.city || null,
       },
       jwtSecret,
-      { expiresIn: "24h" }
+      { expiresIn: "4h" }
     );
 
     return res.status(201).json({
