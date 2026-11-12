@@ -1,7 +1,6 @@
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import Icon from "../components/Icon"
-import SearchBar from "../components/SearchBar"
 import { collectionFrom, valueFrom, vendorFrom } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
 import { useFavorites } from "../hooks/useFavorites"
@@ -11,7 +10,6 @@ import { matchesVendorSearch } from "../lib/search"
 export default function RecommendedPage() {
   const navigate = useNavigate()
   const { favorites, isFavorite, toggleFavorite } = useFavorites()
-  const [searchQuery, setSearchQuery] = useState("")
 
   const userCoords = useMemo(() => {
     try {
@@ -71,12 +69,8 @@ export default function RecommendedPage() {
       limit: 6,
     })
 
-    if (!searchQuery.trim()) {
-      return recommended.slice(0, 6)
-    }
-
-    return recommended.filter((v) => matchesVendorSearch(v, searchQuery)).slice(0, 6)
-  }, [data, userCoords, favorites, searchQuery])
+    return recommended.filter((v) => matchesVendorSearch(v)).slice(0, 6)
+  }, [data, userCoords, favorites])
 
   return (
     <main className="page scroll-page">
@@ -111,14 +105,6 @@ export default function RecommendedPage() {
             </p>
           )}
         </div>
-      </div>
-
-      <div className="section-pad">
-        <SearchBar
-          placeholder="Search recommendations"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
       </div>
 
       <section className="recommend-list">
