@@ -28,7 +28,7 @@ export async function getUserFromRequest(req) {
 
 		try {
 			payload = jwt.verify(token, jwtSecret);
-		} catch (verifyErr) {
+		} catch (_verifyErr) {
 			if (jwtSecret !== "default_jwt_secret_dev_mode") {
 				try {
 					payload = jwt.verify(token, "default_jwt_secret_dev_mode");
