@@ -5,60 +5,79 @@ import SearchBar from "../components/SearchBar"
 import { collectionFrom, valueFrom, vendorFrom } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
 import { useFavorites } from "../hooks/useFavorites"
-import { calculateDistanceInMiles, formatDistance } from "../lib/business"
+import { calculateRecommendations, getCustomerLikedKeywords } from "../lib/recommendations"
+import { matchesVendorSearch } from "../lib/search"
 
 export default function RecommendedPage() {
-  const { data, loading, error } = useApiResource("/recommendations", [])
   const navigate = useNavigate()
-  const { isFavorite, toggleFavorite } = useFavorites()
+  const { favorites, isFavorite, toggleFavorite } = useFavorites()
   const [searchQuery, setSearchQuery] = useState("")
 
-  const cards = useMemo(() => {
-    let userCoords = null
+  const userCoords = useMemo(() => {
     try {
       const stored = localStorage.getItem("userCityCoords")
       if (stored) {
         const parsed = JSON.parse(stored)
         if (Number.isFinite(parsed?.lat) && Number.isFinite(parsed?.lng)) {
-          userCoords = parsed
+          return parsed
         }
       }
     } catch {
-      userCoords = null
+      // ignore
     }
+    return null
+  }, [])
 
-    const list = collectionFrom(data, ["recommendations", "vendors"]).map((item) => {
-      const vendor = vendorFrom(item)
-      if (
-        userCoords &&
-        Number.isFinite(userCoords.lat) &&
-        Number.isFinite(userCoords.lng) &&
-        Number.isFinite(vendor.latitude) &&
-        Number.isFinite(vendor.longitude)
-      ) {
-        const miles = calculateDistanceInMiles(userCoords.lat, userCoords.lng, vendor.latitude, vendor.longitude)
-        return {
-          ...vendor,
-          distanceInMiles: miles,
-          distance: formatDistance(miles),
-        }
-      }
-      return {
-        ...vendor,
-        distanceInMiles: null,
-        distance: null,
-      }
+  const currentCity = useMemo(() => {
+    try {
+      return localStorage.getItem("userCity") || ""
+    } catch {
+      return ""
+    }
+  }, [])
+
+  const endpoint = useMemo(() => {
+    const params = new URLSearchParams()
+    if (userCoords?.lat != null && userCoords?.lng != null) {
+      params.set("lat", String(userCoords.lat))
+      params.set("lng", String(userCoords.lng))
+    }
+    if (favorites.length > 0) {
+      params.set("favorites", favorites.map((f) => f.id).filter(Boolean).join(","))
+    }
+    params.set("limit", "6")
+    const query = params.toString()
+    return `/recommendations${query ? `?${query}` : ""}`
+  }, [userCoords, favorites])
+
+  const { data, loading, error } = useApiResource(endpoint, [endpoint])
+
+  // Extract customer's liked keywords from their favorites for display & transparency
+  const customerLikedKeywords = useMemo(() => {
+    const weights = getCustomerLikedKeywords(favorites)
+    return Array.from(weights.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([kw]) => kw)
+  }, [favorites])
+
+  // Compute up to 6 recommended vendors weighted by proximity in miles and relevant keywords
+  const cards = useMemo(() => {
+    const rawList = collectionFrom(data, ["recommendations", "vendors"]).map(vendorFrom)
+
+    // Run the recommendation algorithm weighted by proximity and relevant keywords
+    const recommended = calculateRecommendations({
+      vendors: rawList,
+      userCoords,
+      favorites,
+      limit: 6,
     })
 
-    if (!searchQuery.trim()) return list
-    const q = searchQuery.toLowerCase()
-    return list.filter(
-      (v) =>
-        v.name?.toLowerCase().includes(q) ||
-        v.type?.toLowerCase().includes(q) ||
-        v.city?.toLowerCase().includes(q)
-    )
-  }, [data, searchQuery])
+    if (!searchQuery.trim()) {
+      return recommended.slice(0, 6)
+    }
+
+    return recommended.filter((v) => matchesVendorSearch(v, searchQuery)).slice(0, 6)
+  }, [data, userCoords, favorites, searchQuery])
 
   return (
     <main className="page scroll-page">
@@ -71,6 +90,29 @@ export default function RecommendedPage() {
           <Icon name="user" size={17} />
         </button>
       </header>
+
+      {/* Recommendations Info Banner */}
+      <div className="recommend-intro" style={{ marginBottom: "12px" }}>
+        <div className="sparkle">
+          <Icon name="heart" size={20} fill="var(--forest)" />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h3 style={{ fontSize: "14px", margin: "0 0 2px" }}>Personalized for you</h3>
+          {customerLikedKeywords.length > 0 ? (
+            <p style={{ margin: 0, fontSize: "11px", color: "var(--muted)", lineHeight: 1.35 }}>
+              Weighted by proximity{currentCity ? ` to ${currentCity}` : ""} and your liked keywords:{" "}
+              <strong style={{ color: "var(--forest)" }}>
+                {customerLikedKeywords.slice(0, 4).join(", ")}
+                {customerLikedKeywords.length > 4 ? "…" : ""}
+              </strong>
+            </p>
+          ) : (
+            <p style={{ margin: 0, fontSize: "11px", color: "var(--muted)", lineHeight: 1.35 }}>
+              Tap the heart on vendors you love to personalize recommendations by your favorite keywords!
+            </p>
+          )}
+        </div>
+      </div>
 
       <div className="section-pad">
         <SearchBar
@@ -90,6 +132,8 @@ export default function RecommendedPage() {
         {cards.map((card, index) => {
           const isFav = isFavorite(card.id)
           const note = valueFrom(card, ["note", "reason", "description"])
+          const keywords = Array.isArray(card.keywords) ? card.keywords : []
+          const matchingKeywords = Array.isArray(card.matchingKeywords) ? card.matchingKeywords : []
 
           return (
             <article
@@ -123,25 +167,46 @@ export default function RecommendedPage() {
                 <div className="sketch-shape" />
               </div>
 
-              <div className="card-body">
-                <div>
-                  {note && <p>{note}</p>}
-                  <h3>{card.name || "Unnamed vendor"}</h3>
-                  <span>{[card.type, card.distance || card.city].filter(Boolean).join(" · ")}</span>
+              <div className="card-body" style={{ flexDirection: "column", alignItems: "stretch", gap: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {note && <p style={{ margin: "0 0 3px", color: "var(--forest)", fontSize: "10px", fontWeight: 800 }}>{note}</p>}
+                    <h3 style={{ margin: "0 0 4px", fontSize: "16px" }}>{card.name || "Unnamed vendor"}</h3>
+                    <span style={{ fontSize: "11px", color: "var(--muted)" }}>
+                      {[card.type, card.distance || card.city].filter(Boolean).join(" · ")}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="round-arrow"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (card.id) {
+                        navigate(`/vendor/${encodeURIComponent(card.id)}`)
+                      }
+                    }}
+                    aria-label={`View ${card.name || "vendor"}`}
+                  >
+                    <Icon name="arrow" size={18} />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  className="round-arrow"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    if (card.id) {
-                      navigate(`/vendor/${encodeURIComponent(card.id)}`)
-                    }
-                  }}
-                  aria-label={`View ${card.name || "vendor"}`}
-                >
-                  <Icon name="arrow" size={18} />
-                </button>
+
+                {keywords.length > 0 && (
+                  <div className="keyword-chip-list">
+                    {keywords.slice(0, 4).map((kw) => {
+                      const isMatch = matchingKeywords.includes(kw)
+                      return (
+                        <span
+                          key={kw}
+                          className={`keyword-chip ${isMatch ? "keyword-match" : ""}`}
+                          title={isMatch ? `Matches your liked keyword "${kw}"` : kw}
+                        >
+                          {isMatch && "✓ "}{kw}
+                        </span>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             </article>
           )

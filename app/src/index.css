@@ -466,3 +466,66 @@ input[type="datetime-local"] {
   line-height: 1;
 }
 
+.keyword-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.keyword-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: #f0f4ee;
+  color: #3b5341;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: lowercase;
+}
+
+.keyword-chip.keyword-match {
+  background: #d8edd2;
+  color: #1a4224;
+  font-weight: 700;
+  border: 1px solid #b2d6aa;
+}
+
+.keyword-chip-remove {
+  border: none;
+  background: none;
+  margin-left: 5px;
+  cursor: pointer;
+  color: inherit;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
+.keyword-chip-btn {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+  color: var(--ink);
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.keyword-chip-btn:hover {
+  background: #eef2ec;
+  border-color: var(--forest);
+}
+
+.keyword-chip-btn.selected {
+  background: var(--forest);
+  color: white;
+  border-color: var(--forest);
+}
+
+

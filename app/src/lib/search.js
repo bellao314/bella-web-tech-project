@@ -28,7 +28,7 @@ const CATEGORY_KEYWORDS = {
 const SPECIALTY_RULES = [
   { match: /donut|doughnut/i, keywords: ["donut", "donuts", "doughnut", "doughnuts", "pastry", "bakery", "sweet", "dessert", "breakfast"] },
   { match: /bbq|barbecue/i, keywords: ["bbq", "barbecue", "smoked", "ribs", "pork", "brisket", "meat", "pulled pork"] },
-  { match: /taco|antojito|guatemala/i, keywords: ["taco", "tacos", "mexican", "latin", "burrito", "salsa", "antojitos", "hispanic"] },
+  { match: /taco|antojito|guatemala|mexic/i, keywords: ["mexican", "taco", "tacos", "latin", "burrito", "salsa", "antojitos", "hispanic"] },
   { match: /hot dog|dog/i, keywords: ["hot dog", "hot dogs", "hotdog", "hotdogs", "sausage", "franks"] },
   { match: /pizza/i, keywords: ["pizza", "pizzas", "pie", "slice", "slices", "italian"] },
   { match: /gyro/i, keywords: ["gyro", "gyros", "greek", "mediterranean", "pita", "tzatziki"] },
@@ -38,13 +38,13 @@ const SPECIALTY_RULES = [
   { match: /balkan/i, keywords: ["balkan", "turkish", "mediterranean", "somun", "cevapi", "eastern european"] },
   { match: /hawaiian|buzzs/i, keywords: ["hawaiian", "hawaii", "poke", "island", "aloha", "grill"] },
   { match: /deli/i, keywords: ["deli", "sandwich", "sandwiches", "panini", "sub", "subs"] },
-  { match: /coffee|cafe|cardamom|juniper/i, keywords: ["coffee", "cafe", "espresso", "latte", "cappuccino", "roaster", "tea", "brew", "pastries"] },
+  { match: /coffee|cafe|cardamom|juniper|espresso|roast/i, keywords: ["coffee", "cafe", "espresso", "latte", "cappuccino", "roaster", "tea", "brew", "pastries"] },
   { match: /brazil/i, keywords: ["brazil", "brazilian", "latin", "empanadas", "churrasco"] },
   { match: /pottery|clay/i, keywords: ["pottery", "ceramics", "clay", "ceramic", "mugs", "vases", "bowls"] },
   { match: /timber|wood/i, keywords: ["wood", "woodwork", "woodcraft", "timber", "furniture", "carving", "cutting boards"] },
   { match: /leather/i, keywords: ["leather", "leatherworks", "wallets", "bags", "belts"] },
   { match: /glass/i, keywords: ["glass", "glassworks", "stained glass", "blown glass"] },
-  { match: /fiber|knot|knits/i, keywords: ["fiber", "fiber arts", "yarn", "knitting", "knit", "macrame", "weaving", "textile"] },
+  { match: /fiber|knot|knits|crochet/i, keywords: ["crochet", "fiber", "fiber arts", "yarn", "knitting", "knit", "macrame", "weaving", "textile"] },
   { match: /candle/i, keywords: ["candle", "candles", "wax", "scented", "aromatherapy", "soy"] },
   { match: /flora|willow|lavender|flower/i, keywords: ["flowers", "florals", "bouquet", "plants", "lavender", "botanicals", "succulents"] },
   { match: /honey|herb/i, keywords: ["honey", "bees", "herbs", "herbal", "raw honey", "tea"] },
@@ -72,10 +72,27 @@ export function getVendorKeywords(vendor) {
   }
 
   if (Array.isArray(vendor.keywords)) {
-    vendor.keywords.forEach((k) => keywords.add(String(k).toLowerCase()))
+    vendor.keywords.forEach((k) => {
+      const clean = String(k).toLowerCase().trim()
+      if (clean) keywords.add(clean)
+    })
+  } else if (typeof vendor.keywords === "string" && vendor.keywords.trim()) {
+    vendor.keywords.split(",").forEach((k) => {
+      const clean = k.toLowerCase().trim()
+      if (clean) keywords.add(clean)
+    })
   }
+
   if (Array.isArray(vendor.tags)) {
-    vendor.tags.forEach((t) => keywords.add(String(t).toLowerCase()))
+    vendor.tags.forEach((t) => {
+      const clean = String(t).toLowerCase().trim()
+      if (clean) keywords.add(clean)
+    })
+  } else if (typeof vendor.tags === "string" && vendor.tags.trim()) {
+    vendor.tags.split(",").forEach((t) => {
+      const clean = t.toLowerCase().trim()
+      if (clean) keywords.add(clean)
+    })
   }
 
   return Array.from(keywords)

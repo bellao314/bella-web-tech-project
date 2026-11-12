@@ -21,6 +21,13 @@ import {
   calculateDistanceInMiles,
   formatDistance,
 } from "../lib/business"
+import { getCustomerLikedKeywords } from "../lib/recommendations"
+
+const POPULAR_KEYWORDS = [
+  "crochet", "mexican", "coffee", "tacos", "bbq", "donuts",
+  "crafts", "jewelry", "bakery", "woodwork", "ceramics",
+  "candles", "produce", "clothing", "vintage", "handmade"
+]
 
 const initials = (name) => {
   if (!name || typeof name !== "string") return ""
@@ -198,6 +205,69 @@ export default function ProfilePage() {
     })
   }, [favorites, userCoords])
 
+  // Business Profile Keywords state
+  const [vendorKeywords, setVendorKeywords] = useState(() => {
+    return Array.isArray(businessData?.keywords)
+      ? businessData.keywords
+      : ["coffee", "beverage", "food"]
+  })
+  const [newKeywordInput, setNewKeywordInput] = useState("")
+  const [keywordSaveMessage, setKeywordSaveMessage] = useState("")
+  const [isSavingKeywords, setIsSavingKeywords] = useState(false)
+
+  const handleToggleKeyword = (kw) => {
+    const clean = kw.toLowerCase().trim()
+    if (!clean) return
+    setVendorKeywords((prev) =>
+      prev.includes(clean) ? prev.filter((k) => k !== clean) : [...prev, clean]
+    )
+  }
+
+  const handleAddCustomKeyword = (e) => {
+    e?.preventDefault()
+    const clean = newKeywordInput.toLowerCase().trim()
+    if (!clean) return
+    if (!vendorKeywords.includes(clean)) {
+      setVendorKeywords((prev) => [...prev, clean])
+    }
+    setNewKeywordInput("")
+  }
+
+  const handleRemoveKeyword = (kw) => {
+    setVendorKeywords((prev) => prev.filter((k) => k !== kw))
+  }
+
+  const handleSaveKeywords = async (e) => {
+    e.preventDefault()
+    setIsSavingKeywords(true)
+    setKeywordSaveMessage("")
+
+    const updated = saveBusinessData({
+      keywords: vendorKeywords,
+    })
+    setBusinessData(updated)
+
+    if (token) {
+      try {
+        await putApi("/user/profile", { keywords: vendorKeywords })
+      } catch {
+        // backend update optional
+      }
+    }
+
+    setIsSavingKeywords(false)
+    setKeywordSaveMessage("Profile keywords saved! Customers interested in these keywords will see your business in recommendations.")
+    setTimeout(() => setKeywordSaveMessage(""), 5000)
+  }
+
+  // Customer liked keywords derived from their favorites
+  const customerLikedKeywords = useMemo(() => {
+    const weights = getCustomerLikedKeywords(favorites)
+    return Array.from(weights.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([kw]) => kw)
+  }, [favorites])
+
   const [customLocAddress, setCustomLocAddress] = useState("")
   const [customStartDateTime, setCustomStartDateTime] = useState("")
   const [customFinishDateTime, setCustomFinishDateTime] = useState("")
@@ -274,6 +344,9 @@ export default function ProfilePage() {
     const handleUpdate = (e) => {
       const updated = e?.detail || getBusinessData(name || "My Business")
       setBusinessData(updated)
+      if (Array.isArray(updated?.keywords)) {
+        setVendorKeywords(updated.keywords)
+      }
       if (!isBusinessScheduled(updated)) {
         setCustomLocAddress("")
         setCustomStartDateTime("")
@@ -771,6 +844,28 @@ export default function ProfilePage() {
             </section>
           )}
 
+          {/* CUSTOMER VIEW: Liked Keywords from Favorites */}
+          {!isBusiness && customerLikedKeywords.length > 0 && (
+            <section className="profile-section">
+              <div className="section-heading">
+                <h3>Your Liked Keywords</h3>
+                <span style={{ fontSize: "11px", color: "var(--forest)", fontWeight: "600" }}>
+                  {customerLikedKeywords.length} tags
+                </span>
+              </div>
+              <p style={{ margin: "0 0 10px", color: "var(--muted)", fontSize: "12px", lineHeight: 1.4 }}>
+                These keywords are gathered from your favorite vendors to power your personalized recommendations list.
+              </p>
+              <div className="keyword-chip-list">
+                {customerLikedKeywords.map((kw) => (
+                  <span key={kw} className="keyword-chip keyword-match">
+                    {kw}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* BUSINESS VIEW: Live Status and Location & Hours Input Section */}
           {isBusiness && (
             <>
@@ -1017,6 +1112,117 @@ export default function ProfilePage() {
                     )}
                   </div>
                 </form>
+              </section>
+
+              {/* BUSINESS VIEW: Profile Keywords Selection */}
+              <section className="profile-section">
+                <div className="section-heading">
+                  <h3>Profile Keywords</h3>
+                  {vendorKeywords.length > 0 && (
+                    <span style={{ fontSize: "11px", color: "var(--forest)", fontWeight: "600" }}>
+                      {vendorKeywords.length} selected
+                    </span>
+                  )}
+                </div>
+                <p style={{ margin: "0 0 12px", color: "var(--muted)", fontSize: "12px", lineHeight: 1.4 }}>
+                  Select keywords that describe your business (e.g. crochet, mexican, coffee). Nearby customers who like vendors with these keywords will see your business in their recommendations.
+                </p>
+
+                {/* Current keywords as chips */}
+                {vendorKeywords.length > 0 ? (
+                  <div className="keyword-chip-list" style={{ marginBottom: "14px" }}>
+                    {vendorKeywords.map((kw) => (
+                      <span key={kw} className="keyword-chip" style={{ fontSize: "12px", padding: "4px 9px" }}>
+                        {kw}
+                        <button
+                          type="button"
+                          className="keyword-chip-remove"
+                          onClick={() => handleRemoveKeyword(kw)}
+                          aria-label={`Remove keyword ${kw}`}
+                          title={`Remove ${kw}`}
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: "12px", color: "var(--muted)", margin: "0 0 12px" }}>
+                    No keywords selected yet. Pick from the suggestions below or add your own.
+                  </p>
+                )}
+
+                {/* Popular keyword selector */}
+                <div style={{ marginBottom: "14px" }}>
+                  <span style={{ display: "block", marginBottom: "6px", fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
+                    Popular Keywords
+                  </span>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {POPULAR_KEYWORDS.map((kw) => {
+                      const isSelected = vendorKeywords.includes(kw)
+                      return (
+                        <button
+                          key={kw}
+                          type="button"
+                          className={`keyword-chip-btn ${isSelected ? "selected" : ""}`}
+                          onClick={() => handleToggleKeyword(kw)}
+                        >
+                          {isSelected ? "✓ " : "+ "}{kw}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Custom keyword input */}
+                <form onSubmit={handleAddCustomKeyword} style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
+                  <div className="input-shell" style={{ flex: 1 }}>
+                    <input
+                      type="text"
+                      placeholder="Add custom keyword (e.g. salsa, pottery)"
+                      value={newKeywordInput}
+                      onChange={(e) => setNewKeywordInput(e.target.value)}
+                      aria-label="Add custom keyword"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="keyword-chip-btn"
+                    style={{ background: "var(--paper)", minHeight: "44px", padding: "0 14px", fontWeight: 700 }}
+                    disabled={!newKeywordInput.trim()}
+                  >
+                    Add
+                  </button>
+                </form>
+
+                {keywordSaveMessage && (
+                  <div
+                    style={{
+                      padding: "9px 12px",
+                      borderRadius: "10px",
+                      background: "#e4efdc",
+                      color: "#2b5138",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      marginBottom: "12px",
+                    }}
+                  >
+                    <Icon name="check" size={16} /> {keywordSaveMessage}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={handleSaveKeywords}
+                  disabled={isSavingKeywords}
+                  style={{ minHeight: "44px", fontSize: "12px" }}
+                >
+                  {isSavingKeywords ? "Saving..." : "Save Keywords"} <Icon name="check" size={16} />
+                </button>
               </section>
             </>
           )}

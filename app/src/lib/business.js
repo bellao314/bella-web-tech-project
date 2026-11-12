@@ -537,6 +537,7 @@ export function getInitialBusinessData(name = "My Business") {
     expiresAt: null,
     startTime: null,
     isLive: false,
+    keywords: ["coffee", "beverage", "food"],
   };
 }
 
@@ -647,6 +648,7 @@ export function resetBusinessLocationHours(fallbackName = "My Business") {
     expiresAt: null,
     startTime: null,
     isLive: false,
+    keywords: current.keywords || ["coffee", "beverage", "food"],
     updatedAt: new Date().toISOString(),
   };
 

@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { db } from "../prisma/db.ts";
 import { calculateDistanceInMiles, formatDistance } from "../services/google-maps.service.js";
+import { getVendorKeywords } from "../services/recommendations.service.js";
+import { vendors as defaultVendors } from "../prisma/export-vendors.js";
 
 const router = Router();
 
@@ -79,15 +81,26 @@ export function formatVendor(vendor, userCoords = null) {
     },
     distance,
     distanceInMiles,
+    keywords: Array.isArray(vendor.keywords) ? vendor.keywords : getVendorKeywords(vendor),
     hours: "10:00 AM – 6:00 PM",
   };
 }
 
 router.get("/", async (req, res, next) => {
   try {
-    const rawVendors = await db.orm.public.Vendor.include("location").all();
-    const lat = req.query.lat != null ? Number(req.query.lat) : null;
-    const lng = req.query.lng != null ? Number(req.query.lng) : null;
+    let rawVendors = [];
+    try {
+      rawVendors = await db.orm.public.Vendor.include("location").all();
+    } catch {
+      rawVendors = [];
+    }
+
+    if (!rawVendors || rawVendors.length === 0) {
+      rawVendors = defaultVendors.map((v, idx) => ({ id: idx + 1, ...v }));
+    }
+
+    const lat = req.query.lat != null && req.query.lat !== "" ? Number(req.query.lat) : null;
+    const lng = req.query.lng != null && req.query.lng !== "" ? Number(req.query.lng) : null;
     const userCoords = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
 
     let vendors = rawVendors.map((v) => formatVendor(v, userCoords));
@@ -112,7 +125,20 @@ router.get("/:id", async (req, res, next) => {
       return res.status(400).json({ error: "Invalid vendor ID." });
     }
 
-    const rawVendor = await db.orm.public.Vendor.where({ id }).include("location").first();
+    let rawVendor = null;
+    try {
+      rawVendor = await db.orm.public.Vendor.where({ id }).include("location").first();
+    } catch {
+      rawVendor = null;
+    }
+
+    if (!rawVendor) {
+      const match = defaultVendors[id - 1];
+      if (match) {
+        rawVendor = { id, ...match };
+      }
+    }
+
     if (!rawVendor) {
       return res.status(404).json({ error: "Vendor not found." });
     }

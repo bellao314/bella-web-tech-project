@@ -5,6 +5,7 @@ import { vendorFrom, valueFrom } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
 import { useFavorites } from "../hooks/useFavorites"
 import { getBusinessData } from "../lib/business"
+import { getVendorKeywords } from "../lib/search"
 
 export default function VendorInfoPage() {
   const { vendorId } = useParams()
@@ -33,12 +34,15 @@ export default function VendorInfoPage() {
         hours: businessData.hours,
         latitude: businessData.latitude,
         longitude: businessData.longitude,
+        keywords: businessData.keywords,
       })
     }
 
     if (data) {
       const v = vendorFrom(data.vendor || data.data || data)
-      if (businessData && (String(v.id) === String(businessData.id) || v.name?.toLowerCase() === businessData.name?.toLowerCase())) {
+      const isCustomMatch = businessData && (String(v.id) === String(businessData.id) || v.name?.toLowerCase() === businessData.name?.toLowerCase())
+      const keywords = isCustomMatch && businessData.keywords ? businessData.keywords : (v.keywords || getVendorKeywords(v))
+      if (isCustomMatch) {
         return {
           ...v,
           hours: businessData.hours || v.hours,
@@ -46,9 +50,13 @@ export default function VendorInfoPage() {
           city: businessData.city || v.city,
           latitude: businessData.latitude || v.latitude,
           longitude: businessData.longitude || v.longitude,
+          keywords,
         }
       }
-      return v
+      return {
+        ...v,
+        keywords,
+      }
     }
 
     // Fallback if vendor not found in API but matches business
@@ -63,6 +71,7 @@ export default function VendorInfoPage() {
         hours: businessData.hours,
         latitude: businessData.latitude,
         longitude: businessData.longitude,
+        keywords: businessData.keywords,
       })
     }
 
@@ -156,6 +165,21 @@ export default function VendorInfoPage() {
                   <strong>{String(value)}</strong>
                 </div>
               ))}
+
+            {Array.isArray(vendor.keywords) && vendor.keywords.length > 0 && (
+              <div style={{ marginTop: "12px", paddingTop: "10px", borderTop: "1px solid var(--line)" }}>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Profile Keywords
+                </span>
+                <div className="keyword-chip-list" style={{ marginTop: "6px" }}>
+                  {vendor.keywords.map((kw) => (
+                    <span key={kw} className="keyword-chip">
+                      {kw}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
 
           <div style={{ padding: "0 22px" }}>
