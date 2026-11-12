@@ -1,0 +1,65 @@
+# ==============================================================================
+# Unified Single-Container Dockerfile for Google Cloud Run
+# Builds Vite frontend + Express API into a single serverless service
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Stage 1: Build Frontend Assets
+# ------------------------------------------------------------------------------
+FROM node:24-bookworm-slim AS frontend-builder
+WORKDIR /build/app
+
+# Install frontend dependencies
+COPY app/package.json app/package-lock.json ./
+RUN npm ci
+
+# Copy frontend source
+COPY app ./
+
+# Build arguments for Vite static bundling
+ARG VITE_GOOGLE_API_KEY
+ARG VITE_API_URL=/api
+ENV VITE_GOOGLE_API_KEY=$VITE_GOOGLE_API_KEY
+ENV VITE_API_URL=$VITE_API_URL
+
+RUN npm run build
+
+# ------------------------------------------------------------------------------
+# Stage 2: Production Server (Backend + Built Frontend)
+# ------------------------------------------------------------------------------
+FROM node:24-bookworm-slim AS runner
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy dependency manifests
+COPY package.json package-lock.json ./
+COPY api/package.json api/package-lock.json ./api/
+
+# Install backend and Prisma dependencies
+RUN npm ci && cd api && npm ci
+
+# Copy backend source code, migrations, and config
+COPY prisma.config.ts ./
+COPY migrations ./migrations
+COPY api ./api
+
+# Copy built frontend assets from Stage 1 into /app/app/dist
+COPY --from=frontend-builder /build/app/dist ./app/dist
+
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Cloud Run defaults
+ENV NODE_ENV=production
+ENV PORT=8080
+ENV RUN_MIGRATIONS=false
+EXPOSE 8080
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["node", "api/index.js"]

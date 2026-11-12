@@ -1,4 +1,5 @@
 import path from "node:path";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import dotenv from "dotenv";
@@ -29,7 +30,21 @@ app.use("/api/favorites", user);
 app.use("/api/vendors", vendors);
 app.use("/api/recommendations", recommendations);
 app.use("/api/maps", mapsRouter);
+
+// Serve frontend static build if present (e.g. unified single-container deployment)
+const clientDistPath = path.resolve(__dirname, "../app/dist");
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api") || req.path === "/health") {
+      return next();
+    }
+    res.sendFile(path.join(clientDistPath, "index.html"));
+  });
+}
+
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 app.listen(port, () => console.log(`API listening on http://localhost:${port}`));
+

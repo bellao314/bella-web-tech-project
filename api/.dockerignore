@@ -1,0 +1,16 @@
+node_modules/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+npm-debug.log*
+.DS_Store
+.git/
+.vscode/
+.idea/
+.cursor/
+.agents/
+.claude/
+.devin/
+tests/
