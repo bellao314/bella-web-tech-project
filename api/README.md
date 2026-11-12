@@ -5,6 +5,7 @@ Express API that keeps the Google Maps API key on the server. It requires Node 1
 ```bash
 npm install
 npm run dev
+npm run lint
 ```
 
 Endpoints:
