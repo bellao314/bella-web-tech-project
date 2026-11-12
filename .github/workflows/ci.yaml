@@ -62,8 +62,8 @@ jobs:
             - name: Run Integration Tests
               working-directory: ./api
               env:
-                DATABASE_URL: postgres://postgres:postgres@localhost:5432/sluop-test
-                JWT_SECRET: TEST_JWT_SECRET
+                DATABASE_URL: postgresql://bellaott@localhost:5432/mobile-vendor
+                JWT_SECRET: JWT_SECRET
                 BASE_URL: "http://localhost:5173"
               run: npm run test
 
