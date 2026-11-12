@@ -12,6 +12,7 @@ import user from "./routes/user.js";
 import vendors from "./routes/vendors.js";
 import recommendations from "./routes/recommendations.js";
 import mapsRouter from "./routes/maps.routes.js";
+import forgotPassword from "./routes/forgot-password.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware.js";
 
 const app = express();
@@ -20,6 +21,7 @@ const port = Number(process.env.PORT) || 3000;
 app.use(express.json());
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 app.use("/api/auth", auth);
+app.use("/api/forgot-password", forgotPassword);
 app.use("/api/user", user);
 app.use("/api/profile", user);
 app.use("/api/favorites", user);

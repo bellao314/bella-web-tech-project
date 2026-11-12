@@ -2,6 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { db } from "../prisma/db.ts";
+import forgotPasswordRouter from "./forgot-password.js";
 
 const router = Router();
 
@@ -182,5 +183,8 @@ async function handlePasswordUpdate(req, res, next) {
 
 router.put("/password", handlePasswordUpdate);
 router.put("/", handlePasswordUpdate);
+
+router.use("/forgot-password", forgotPasswordRouter);
+router.use("/reset-password", forgotPasswordRouter);
 
 export default router;

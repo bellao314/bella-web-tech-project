@@ -5,6 +5,7 @@ import HomePage from "./pages/HomePage"
 import RecommendedPage from "./pages/RecommendedPage"
 import ProfilePage from "./pages/ProfilePage"
 import VendorInfoPage from "./pages/VendorInfoPage"
+import ResetPasswordPage from "./pages/ResetPasswordPage"
 import { useAuth } from "./hooks/useAuth"
 
 function AppLayout() {
@@ -34,6 +35,8 @@ export default function App() {
         <Route path="business" element={<Navigate to="/vendor/my-business" replace />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="vendor/:vendorId" element={<VendorInfoPage />} />
+        <Route path="reset" element={<ResetPasswordPage />} />
+        <Route path="reset-password" element={<ResetPasswordPage />} />
       </Route>
     </Routes>
   )
