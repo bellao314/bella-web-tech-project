@@ -16,6 +16,7 @@ import {
   parseOperatingHours,
   calculateDistanceInMiles,
   formatDistance,
+  setStoredAccountType,
 } from "../lib/business"
 import { matchesVendorSearch } from "../lib/search"
 
@@ -48,7 +49,13 @@ export default function MapPage() {
   const profile = profileData?.profile || profileData?.data || profileData
   const apiAccountType = valueFrom(profile, ["type", "accountType", "account_type", "role"]) 
   const accountType = (apiAccountType || localStorage.getItem("userAccountType") || "customer").toLowerCase()
-  const isBusiness = accountType === "business"
+  const isBusiness = accountType === "business" || accountType === "vendor"
+
+  useEffect(() => {
+    if (apiAccountType && apiAccountType.toLowerCase() !== localStorage.getItem("userAccountType")) {
+      setStoredAccountType(apiAccountType.toLowerCase())
+    }
+  }, [apiAccountType])
 
   const [updatedLocation, setUpdatedLocation] = useState(null)
 

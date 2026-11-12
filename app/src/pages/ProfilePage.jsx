@@ -1,7 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import Icon from "../components/Icon"
-import SettingsList from "../components/SettingsList"
 import { collectionFrom, valueFrom, vendorFrom, getAuthToken, putApi, getApi } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
 import { useAuth } from "../hooks/useAuth"
@@ -20,6 +19,7 @@ import {
   formatScheduledHours,
   calculateDistanceInMiles,
   formatDistance,
+  setStoredAccountType,
 } from "../lib/business"
 import {
   getVendorCategories,
@@ -72,7 +72,13 @@ export default function ProfilePage() {
   const createdAt = valueFrom(profile, ["createdAt", "created_at"])
   const apiAccountType = valueFrom(profile, ["type", "accountType", "account_type", "role"])
   const accountType = (apiAccountType || localStorage.getItem("userAccountType") || "customer").toLowerCase()
-  const isBusiness = accountType === "business"
+  const isBusiness = accountType === "business" || accountType === "vendor"
+
+  useEffect(() => {
+    if (apiAccountType && apiAccountType.toLowerCase() !== localStorage.getItem("userAccountType")) {
+      setStoredAccountType(apiAccountType.toLowerCase())
+    }
+  }, [apiAccountType])
 
   // Customer Location (City) state
   const [cityInput, setCityInput] = useState(() => localStorage.getItem("userCity") || "")
@@ -1222,17 +1228,6 @@ export default function ProfilePage() {
                 </button>
               </section>
             </>
-          )}
-
-          {isBusiness && (
-            <SettingsList
-              items={
-                [
-                  ["View business details page", "briefcase", () => navigate("/vendor/my-business")],
-                  ["View live pin on map", "map", () => navigate("/")],
-                ]
-              }
-            />
           )}
         </>
       )}

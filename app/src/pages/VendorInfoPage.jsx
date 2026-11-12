@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, Navigate } from "react-router-dom"
+import { useAuth } from "../hooks/useAuth"
 import Icon from "../components/Icon"
 import { vendorFrom, valueFrom } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
@@ -11,17 +12,18 @@ import { getVendorCategories } from "../lib/recommendations"
 export default function VendorInfoPage() {
   const { vendorId } = useParams()
   const navigate = useNavigate()
-  const isMyBusiness = vendorId === "my-business"
+  const { isVendor, isAuthenticated, user } = useAuth()
+  const isMyBusiness = vendorId === "my-business" || !vendorId
   const { data, loading, error } = useApiResource(vendorId && !isMyBusiness ? `/vendors/${encodeURIComponent(vendorId)}` : null, null)
   const { isFavorite, toggleFavorite } = useFavorites()
 
-  const [businessData, setBusinessData] = useState(() => getBusinessData())
+  const [businessData, setBusinessData] = useState(() => getBusinessData(user?.name || "My Business"))
 
   useEffect(() => {
-    const handleUpdate = (e) => setBusinessData(e?.detail || getBusinessData())
+    const handleUpdate = (e) => setBusinessData(e?.detail || getBusinessData(user?.name || "My Business"))
     window.addEventListener("businessDataUpdated", handleUpdate)
     return () => window.removeEventListener("businessDataUpdated", handleUpdate)
-  }, [])
+  }, [user?.name])
 
   const vendor = useMemo(() => {
     let result = null
@@ -86,6 +88,14 @@ export default function VendorInfoPage() {
 
   const isFav = vendor ? isFavorite(vendor.id) : false
 
+  if (isMyBusiness && isAuthenticated && !isVendor) {
+    return <Navigate to="/recommended" replace />
+  }
+
+  if (isMyBusiness && !isAuthenticated) {
+    return <Navigate to="/" replace />
+  }
+
   return (
     <main className="page scroll-page profile-page">
       <header className="page-header">
@@ -110,7 +120,17 @@ export default function VendorInfoPage() {
               />
             </button>
           )}
-          <button className="icon-button" onClick={() => navigate(-1)} aria-label="Go back">
+          <button
+            className="icon-button"
+            onClick={() => {
+              if (window.history.state && window.history.state.idx > 0) {
+                navigate(-1)
+              } else {
+                navigate("/")
+              }
+            }}
+            aria-label="Go back"
+          >
             <Icon name="arrow" size={20} />
           </button>
         </div>

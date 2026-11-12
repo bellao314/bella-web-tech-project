@@ -1,14 +1,16 @@
 import { useMemo } from "react"
-import { useNavigate } from "react-router-dom"
+import { Navigate, useNavigate } from "react-router-dom"
 import Icon from "../components/Icon"
 import { collectionFrom, valueFrom, vendorFrom } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
 import { useFavorites } from "../hooks/useFavorites"
+import { useAuth } from "../hooks/useAuth"
 import { calculateRecommendations, getCustomerLikedCategories } from "../lib/recommendations"
 import { matchesVendorSearch } from "../lib/search"
 
 export default function RecommendedPage() {
   const navigate = useNavigate()
+  const { isVendor } = useAuth()
   const { favorites, isFavorite, toggleFavorite } = useFavorites()
 
   const userCoords = useMemo(() => {
@@ -35,6 +37,7 @@ export default function RecommendedPage() {
   }, [])
 
   const endpoint = useMemo(() => {
+    if (isVendor) return null
     const params = new URLSearchParams()
     if (userCoords?.lat != null && userCoords?.lng != null) {
       params.set("lat", String(userCoords.lat))
@@ -46,7 +49,7 @@ export default function RecommendedPage() {
     params.set("limit", "6")
     const query = params.toString()
     return `/recommendations${query ? `?${query}` : ""}`
-  }, [userCoords, favorites])
+  }, [userCoords, favorites, isVendor])
 
   const { data, loading, error } = useApiResource(endpoint, [endpoint])
 
@@ -71,6 +74,10 @@ export default function RecommendedPage() {
 
     return recommended.filter((v) => matchesVendorSearch(v)).slice(0, 6)
   }, [data, userCoords, favorites])
+
+  if (isVendor) {
+    return <Navigate to="/vendor/my-business" replace />
+  }
 
   return (
     <main className="page scroll-page">

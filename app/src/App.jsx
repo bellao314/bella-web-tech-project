@@ -13,7 +13,7 @@ function AppLayout() {
   const isHomeOrMap = pathname === "/" || pathname === "/map"
   const showNav = isHomeOrMap
     ? isAuthenticated
-    : ["/recommended", "/profile"].includes(pathname) || pathname.startsWith("/vendor/")
+    : ["/recommended", "/profile", "/business"].includes(pathname) || pathname.startsWith("/vendor/")
 
   return (
     <div className="prototype-shell">
@@ -31,6 +31,7 @@ export default function App() {
         <Route index element={<HomePage />} />
         <Route path="map" element={<Navigate to="/" replace />} />
         <Route path="recommended" element={<RecommendedPage />} />
+        <Route path="business" element={<Navigate to="/vendor/my-business" replace />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="vendor/:vendorId" element={<VendorInfoPage />} />
       </Route>
