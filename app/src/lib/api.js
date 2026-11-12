@@ -81,12 +81,13 @@ export function getAuthToken() {
   return null
 }
 
-export function setAuthToken(token, rememberMe = false) {
+export function setAuthToken(token, rememberMe) {
   if (!token) {
     clearAuthToken()
     return
   }
-  if (rememberMe) {
+  const isRemembered = rememberMe !== undefined ? rememberMe : Boolean(localStorage.getItem("authToken"))
+  if (isRemembered) {
     sessionStorage.removeItem("authToken")
     localStorage.setItem("authToken", token)
   } else {

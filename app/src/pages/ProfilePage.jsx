@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import Icon from "../components/Icon"
-import { collectionFrom, valueFrom, vendorFrom, getAuthToken, putApi, getApi } from "../lib/api"
+import { collectionFrom, valueFrom, vendorFrom, getAuthToken, setAuthToken, putApi, getApi } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
 import { useAuth } from "../hooks/useAuth"
 import { useFavorites } from "../hooks/useFavorites"
@@ -64,7 +64,12 @@ export default function ProfilePage() {
   const token = authToken || getAuthToken()
   const { data, loading, error } = useApiResource(token ? "/user/profile" : null, null)
   const { favorites: localFavorites, removeFavorite } = useFavorites()
-  const profile = data?.profile || data?.data || data
+  const [profileOverride, setProfileOverride] = useState(null)
+  const baseProfile = data?.profile || data?.data || data
+  const profile = useMemo(() => {
+    if (!profileOverride) return baseProfile
+    return { ...baseProfile, ...profileOverride }
+  }, [baseProfile, profileOverride])
   const apiFavorites = useMemo(() => collectionFrom(profile?.favorites || profile, ["favorites", "vendors"]).map(vendorFrom), [profile])
 
   const favorites = useMemo(() => {
@@ -731,10 +736,115 @@ export default function ProfilePage() {
     navigate("/")
   }
 
+  // Account Details Edit state
+  const [isEditingDetails, setIsEditingDetails] = useState(false)
+  const [editEmail, setEditEmail] = useState("")
+  const [editName, setEditName] = useState("")
+  const [editVendorType, setEditVendorType] = useState("")
+  const [passwordConfirm, setPasswordConfirm] = useState("")
+  const [isSavingDetails, setIsSavingDetails] = useState(false)
+  const [detailsSaveMessage, setDetailsSaveMessage] = useState("")
+  const [detailsSaveError, setDetailsSaveError] = useState("")
+
+  const vendorCategory =
+    valueFrom(profile, ["vendorType", "category"]) || businessData?.category || "Mobile Food & Beverage"
+
+  const handleStartEditDetails = () => {
+    setEditEmail(email || "")
+    setEditName(name || businessData?.name || "")
+    setEditVendorType(vendorCategory)
+    setPasswordConfirm("")
+    setDetailsSaveError("")
+    setDetailsSaveMessage("")
+    setIsEditingDetails(true)
+  }
+
+  const handleCancelEditDetails = () => {
+    setIsEditingDetails(false)
+    setPasswordConfirm("")
+    setDetailsSaveError("")
+  }
+
+  const handleSaveDetails = async (e) => {
+    e.preventDefault()
+    setDetailsSaveError("")
+    setDetailsSaveMessage("")
+
+    if (!passwordConfirm.trim()) {
+      setDetailsSaveError("Current password is required to update account details.")
+      return
+    }
+
+    if (!editEmail.trim() || !editEmail.includes("@")) {
+      setDetailsSaveError("Please enter a valid email address.")
+      return
+    }
+
+    if (isBusiness && !editName.trim()) {
+      setDetailsSaveError("Business name cannot be empty.")
+      return
+    }
+
+    if (isBusiness && !editVendorType.trim()) {
+      setDetailsSaveError("Vendor type cannot be empty.")
+      return
+    }
+
+    setIsSavingDetails(true)
+
+    try {
+      const payload = {
+        email: editEmail.trim(),
+        password: passwordConfirm,
+        ...(isBusiness
+          ? {
+              name: editName.trim(),
+              vendorType: editVendorType.trim(),
+            }
+          : {}),
+      }
+
+      const res = await putApi("/user/profile", payload)
+
+      if (res?.profile) {
+        setProfileOverride(res.profile)
+      } else {
+        setProfileOverride((prev) => ({
+          ...(prev || {}),
+          name: isBusiness ? editName.trim() : (name || ""),
+          email: editEmail.trim(),
+          vendorType: isBusiness ? editVendorType.trim() : undefined,
+          category: isBusiness ? editVendorType.trim() : undefined,
+        }))
+      }
+
+      if (res?.token) {
+        setAuthToken(res.token)
+      }
+
+      if (isBusiness) {
+        saveBusinessData({
+          name: editName.trim(),
+          category: editVendorType.trim(),
+        })
+      }
+
+      setDetailsSaveMessage("Account details updated successfully!")
+      setIsEditingDetails(false)
+      setPasswordConfirm("")
+      setTimeout(() => setDetailsSaveMessage(""), 5000)
+    } catch (err) {
+      setDetailsSaveError(err.message || "Failed to update details. Please verify your password.")
+    } finally {
+      setIsSavingDetails(false)
+    }
+  }
+
   const userDetails = [
     ["Account type", isBusiness ? "Business" : "Customer"],
     [isBusiness ? "Business name" : "Full name", name || "Not set"],
     ["Email address", email],
+    isBusiness ? ["Vendor type", vendorCategory] : null,
     ["Member since", formatDate(createdAt)],
     !isBusiness ? ["Location", currentCity || "Not set"] : null,
   ].filter(Boolean)
@@ -844,14 +954,211 @@ export default function ProfilePage() {
 
           <section className="profile-section">
             <div className="section-heading">
-              <h3>{isBusiness ? "Business details" : "User details"}</h3>
+              <h3>{isBusiness ? "Business details" : "Account details"}</h3>
+              {!isEditingDetails && (
+                <button
+                  type="button"
+                  onClick={handleStartEditDetails}
+                  style={{
+                    border: 0,
+                    background: "none",
+                    color: "var(--forest)",
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                  aria-label="Edit account details"
+                >
+                  <Icon name="settings" size={13} /> Edit details
+                </button>
+              )}
             </div>
-            {userDetails.map(([label, value]) => (
-              <div className="info-row" key={label}>
-                <span>{label}</span>
-                <strong>{String(value)}</strong>
+
+            {detailsSaveMessage && (
+              <div
+                style={{
+                  padding: "9px 12px",
+                  borderRadius: "10px",
+                  background: "#e4efdc",
+                  color: "#2b5138",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  marginBottom: "12px",
+                }}
+              >
+                <Icon name="check" size={16} /> {detailsSaveMessage}
               </div>
-            ))}
+            )}
+
+            {!isEditingDetails ? (
+              userDetails.map(([label, value]) => (
+                <div className="info-row" key={label}>
+                  <span>{label}</span>
+                  <strong>{String(value)}</strong>
+                </div>
+              ))
+            ) : (
+              <form onSubmit={handleSaveDetails} style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <p style={{ margin: "0 0 4px", fontSize: "11px", color: "var(--muted)", lineHeight: 1.4 }}>
+                  {isBusiness
+                    ? "Update your business name, email address, and vendor type below. Enter your current password to confirm and save changes."
+                    : "Update your email address below. Enter your current password to confirm and save changes."}
+                </p>
+
+                {detailsSaveError && (
+                  <div
+                    style={{
+                      padding: "9px 12px",
+                      borderRadius: "10px",
+                      background: "#fde8e8",
+                      color: "#991b1b",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <Icon name="clock" size={16} /> {detailsSaveError}
+                  </div>
+                )}
+
+                <div className="info-row" style={{ paddingBottom: "8px", borderBottom: "1px solid var(--line)" }}>
+                  <span>Account type</span>
+                  <strong>{isBusiness ? "Business" : "Customer"}</strong>
+                </div>
+
+                {!isBusiness && (
+                  <div className="info-row" style={{ paddingBottom: "8px", borderBottom: "1px solid var(--line)" }}>
+                    <span>Full name</span>
+                    <strong>{name || "Not set"}</strong>
+                  </div>
+                )}
+
+                {isBusiness && (
+                  <div>
+                    <label htmlFor="editBusinessNameInput" style={{ display: "block", marginBottom: "6px", fontSize: "12px", fontWeight: 700 }}>
+                      Business name <span style={{ color: "#e11d48" }}>*</span>
+                    </label>
+                    <div className="input-shell">
+                      <Icon name="briefcase" size={17} />
+                      <input
+                        id="editBusinessNameInput"
+                        type="text"
+                        placeholder="Business Name"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        required
+                        disabled={isSavingDetails}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label htmlFor="editEmailInput" style={{ display: "block", marginBottom: "6px", fontSize: "12px", fontWeight: 700 }}>
+                    Email address <span style={{ color: "#e11d48" }}>*</span>
+                  </label>
+                  <div className="input-shell">
+                    <Icon name="mail" size={17} />
+                    <input
+                      id="editEmailInput"
+                      type="email"
+                      placeholder="Email address"
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      required
+                      disabled={isSavingDetails}
+                    />
+                  </div>
+                </div>
+
+                {isBusiness && (
+                  <div>
+                    <label htmlFor="editVendorTypeInput" style={{ display: "block", marginBottom: "6px", fontSize: "12px", fontWeight: 700 }}>
+                      Vendor type <span style={{ color: "#e11d48" }}>*</span>
+                    </label>
+                    <div className="input-shell">
+                      <input
+                        id="editVendorTypeInput"
+                        type="text"
+                        list="vendor-type-presets-list"
+                        placeholder="e.g. Food Truck, Crafter, Jewelry, etc."
+                        value={editVendorType}
+                        onChange={(e) => setEditVendorType(e.target.value)}
+                        required
+                        disabled={isSavingDetails}
+                      />
+                      <datalist id="vendor-type-presets-list">
+                        <option value="Food Truck" />
+                        <option value="Farmer's Market" />
+                        <option value="Crafter" />
+                        <option value="Jewelry" />
+                        <option value="Mobile Boutique" />
+                        <option value="Mobile Food & Beverage" />
+                      </datalist>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ marginTop: "4px", paddingTop: "12px", borderTop: "1px dashed var(--line)" }}>
+                  <label htmlFor="passwordConfirmInput" style={{ display: "block", marginBottom: "6px", fontSize: "12px", fontWeight: 700 }}>
+                    Current password <span style={{ color: "#e11d48" }}>*</span>
+                  </label>
+                  <div className="input-shell">
+                    <Icon name="lock" size={17} />
+                    <input
+                      id="passwordConfirmInput"
+                      type="password"
+                      placeholder="Enter password to confirm changes"
+                      value={passwordConfirm}
+                      onChange={(e) => setPasswordConfirm(e.target.value)}
+                      required
+                      autoComplete="current-password"
+                      disabled={isSavingDetails}
+                    />
+                  </div>
+                  <span style={{ display: "block", marginTop: "4px", fontSize: "10px", color: "var(--muted)" }}>
+                    Your password is required to verify your identity before saving edits.
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
+                  <button
+                    type="submit"
+                    className="primary-button"
+                    disabled={isSavingDetails || !passwordConfirm.trim()}
+                    style={{ flex: 1, minHeight: "44px", fontSize: "12px" }}
+                  >
+                    {isSavingDetails ? "Saving Changes..." : "Save changes"} <Icon name="check" size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelEditDetails}
+                    disabled={isSavingDetails}
+                    style={{
+                      padding: "0 18px",
+                      borderRadius: "13px",
+                      background: "white",
+                      color: "#4b5563",
+                      border: "1.5px solid var(--line)",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      minHeight: "44px",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
           </section>
 
           {/* CUSTOMER VIEW: Location (City) */}
