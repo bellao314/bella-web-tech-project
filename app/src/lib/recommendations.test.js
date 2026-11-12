@@ -2,10 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   calculateRecommendations,
-  getCustomerLikedKeywords,
+  getCustomerLikedCategories,
+  getVendorCategories,
 } from "./recommendations.js";
 
-test("frontend calculateRecommendations weights proximity in miles and number of relevant keywords", () => {
+test("frontend calculateRecommendations weights proximity in miles and keyword categories", () => {
   const userCoords = { lat: 38.627, lng: -90.199 };
 
   // Customer likes vendors with crochet, mexican, coffee
@@ -36,30 +37,43 @@ test("frontend calculateRecommendations weights proximity in miles and number of
   // Acceptance criteria 1: Displays up to 6 vendors
   assert.equal(results.length, 6);
 
-  // Acceptance criteria 2: More vendors containing crochet, mexican, coffee populate at the top
+  // Acceptance criteria 2: More vendors containing crochet, mexican, coffee categories populate at the top
   const topIds = results.slice(0, 4).map((r) => r.id);
-  assert.ok(topIds.includes(15), "Vendor with crochet AND coffee should be in top results");
-  assert.ok(topIds.includes(11), "Vendor with crochet should be in top results");
-  assert.ok(topIds.includes(12), "Vendor with mexican should be in top results");
-  assert.ok(topIds.includes(13), "Vendor with coffee should be in top results");
+  assert.ok(topIds.includes(15), "Vendor in Fiber Arts AND Coffee categories should be in top results");
+  assert.ok(topIds.includes(11), "Vendor in Fiber Arts category should be in top results");
+  assert.ok(topIds.includes(12), "Vendor in Mexican food category should be in top results");
+  assert.ok(topIds.includes(13), "Vendor in Coffee & Cafe category should be in top results");
 
-  // Every recommended vendor has distance, distanceInMiles, and note
+  // Every recommended vendor has distance, distanceInMiles, categories, and note
   for (const rec of results) {
     assert.ok(rec.distanceInMiles != null);
     assert.ok(typeof rec.distance === "string");
     assert.ok(typeof rec.note === "string");
+    assert.ok(Array.isArray(rec.categories));
   }
 });
 
-test("getCustomerLikedKeywords extracts keywords properly", () => {
+test("getCustomerLikedCategories extracts keyword categories properly", () => {
   const favorites = [
-    { id: 1, keywords: ["crochet", "yarn"] },
-    { id: 2, keywords: ["mexican"] },
-    { id: 3, keywords: ["coffee"] },
+    { id: 1, name: "Yarn Haven", type: "crafter", keywords: ["crochet", "yarn"] },
+    { id: 2, name: "Taco Truck", type: "food truck", keywords: ["mexican"] },
+    { id: 3, name: "Roasters", type: "food truck", keywords: ["coffee"] },
   ];
 
-  const weights = getCustomerLikedKeywords(favorites);
-  assert.ok(weights.has("crochet"));
-  assert.ok(weights.has("mexican"));
-  assert.ok(weights.has("coffee"));
+  const catMap = getCustomerLikedCategories(favorites);
+  assert.ok(catMap.has("fiber_crochet"), "Customer likes Fiber Arts & Crochet");
+  assert.ok(catMap.has("mexican_latin"), "Customer likes Mexican & Latin Food");
+  assert.ok(catMap.has("coffee_cafe"), "Customer likes Coffee & Cafe");
+});
+
+test("getVendorCategories resolves categories for individual vendors", () => {
+  const vendor = {
+    name: "Espresso & Pastry Cart",
+    type: "food truck",
+    keywords: ["coffee", "bakery"],
+  };
+  const cats = getVendorCategories(vendor);
+  const ids = cats.map((c) => c.id);
+  assert.ok(ids.includes("coffee_cafe"));
+  assert.ok(ids.includes("bakery_sweets"));
 });

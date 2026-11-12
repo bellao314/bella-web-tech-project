@@ -6,6 +6,7 @@ import { useApiResource } from "../hooks/useApiResource"
 import { useFavorites } from "../hooks/useFavorites"
 import { getBusinessData } from "../lib/business"
 import { getVendorKeywords } from "../lib/search"
+import { getVendorCategories } from "../lib/recommendations"
 
 export default function VendorInfoPage() {
   const { vendorId } = useParams()
@@ -23,8 +24,9 @@ export default function VendorInfoPage() {
   }, [])
 
   const vendor = useMemo(() => {
+    let result = null
     if (isMyBusiness) {
-      return vendorFrom({
+      result = vendorFrom({
         id: "my-business",
         name: businessData.name || "My Business",
         type: businessData.category || "Mobile Food & Beverage",
@@ -36,14 +38,12 @@ export default function VendorInfoPage() {
         longitude: businessData.longitude,
         keywords: businessData.keywords,
       })
-    }
-
-    if (data) {
+    } else if (data) {
       const v = vendorFrom(data.vendor || data.data || data)
       const isCustomMatch = businessData && (String(v.id) === String(businessData.id) || v.name?.toLowerCase() === businessData.name?.toLowerCase())
       const keywords = isCustomMatch && businessData.keywords ? businessData.keywords : (v.keywords || getVendorKeywords(v))
       if (isCustomMatch) {
-        return {
+        result = {
           ...v,
           hours: businessData.hours || v.hours,
           address: businessData.address || businessData.locationName || v.address,
@@ -52,16 +52,14 @@ export default function VendorInfoPage() {
           longitude: businessData.longitude || v.longitude,
           keywords,
         }
+      } else {
+        result = {
+          ...v,
+          keywords,
+        }
       }
-      return {
-        ...v,
-        keywords,
-      }
-    }
-
-    // Fallback if vendor not found in API but matches business
-    if (businessData && (!vendorId || vendorId === String(businessData.id))) {
-      return vendorFrom({
+    } else if (businessData && (!vendorId || vendorId === String(businessData.id))) {
+      result = vendorFrom({
         id: businessData.id || "my-business",
         name: businessData.name || "My Business",
         type: businessData.category || "Mobile Food & Beverage",
@@ -73,6 +71,14 @@ export default function VendorInfoPage() {
         longitude: businessData.longitude,
         keywords: businessData.keywords,
       })
+    }
+
+    if (result) {
+      const cats = getVendorCategories(result)
+      return {
+        ...result,
+        categories: cats.map((c) => c.label),
+      }
     }
 
     return null
@@ -165,6 +171,21 @@ export default function VendorInfoPage() {
                   <strong>{String(value)}</strong>
                 </div>
               ))}
+
+            {Array.isArray(vendor.categories) && vendor.categories.length > 0 && (
+              <div style={{ marginTop: "12px", paddingTop: "10px", borderTop: "1px solid var(--line)" }}>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Keyword Categories
+                </span>
+                <div className="keyword-chip-list" style={{ marginTop: "6px" }}>
+                  {vendor.categories.map((cat) => (
+                    <span key={cat} className="keyword-chip keyword-match">
+                      ★ {cat}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {Array.isArray(vendor.keywords) && vendor.keywords.length > 0 && (
               <div style={{ marginTop: "12px", paddingTop: "10px", borderTop: "1px solid var(--line)" }}>

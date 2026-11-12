@@ -21,7 +21,9 @@ import {
   calculateDistanceInMiles,
   formatDistance,
 } from "../lib/business"
-import { getCustomerLikedKeywords } from "../lib/recommendations"
+import {
+  getVendorCategories,
+} from "../lib/recommendations"
 
 const POPULAR_KEYWORDS = [
   "crochet", "mexican", "coffee", "tacos", "bbq", "donuts",
@@ -260,13 +262,14 @@ export default function ProfilePage() {
     setTimeout(() => setKeywordSaveMessage(""), 5000)
   }
 
-  // Customer liked keywords derived from their favorites
-  const customerLikedKeywords = useMemo(() => {
-    const weights = getCustomerLikedKeywords(favorites)
-    return Array.from(weights.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([kw]) => kw)
-  }, [favorites])
+  // Active keyword categories mapped from vendor's selected profile keywords
+  const activeBusinessCategories = useMemo(() => {
+    return getVendorCategories({
+      keywords: vendorKeywords,
+      name: name || businessData.name || "My Business",
+      type: businessData.category || "Mobile Food & Beverage",
+    })
+  }, [vendorKeywords, name, businessData])
 
   const [customLocAddress, setCustomLocAddress] = useState("")
   const [customStartDateTime, setCustomStartDateTime] = useState("")
@@ -844,28 +847,6 @@ export default function ProfilePage() {
             </section>
           )}
 
-          {/* CUSTOMER VIEW: Liked Keywords from Favorites */}
-          {!isBusiness && customerLikedKeywords.length > 0 && (
-            <section className="profile-section">
-              <div className="section-heading">
-                <h3>Your Liked Keywords</h3>
-                <span style={{ fontSize: "11px", color: "var(--forest)", fontWeight: "600" }}>
-                  {customerLikedKeywords.length} tags
-                </span>
-              </div>
-              <p style={{ margin: "0 0 10px", color: "var(--muted)", fontSize: "12px", lineHeight: 1.4 }}>
-                These keywords are gathered from your favorite vendors to power your personalized recommendations list.
-              </p>
-              <div className="keyword-chip-list">
-                {customerLikedKeywords.map((kw) => (
-                  <span key={kw} className="keyword-chip keyword-match">
-                    {kw}
-                  </span>
-                ))}
-              </div>
-            </section>
-          )}
-
           {/* BUSINESS VIEW: Live Status and Location & Hours Input Section */}
           {isBusiness && (
             <>
@@ -1114,10 +1095,10 @@ export default function ProfilePage() {
                 </form>
               </section>
 
-              {/* BUSINESS VIEW: Profile Keywords Selection */}
+              {/* BUSINESS VIEW: Profile Keywords & Categories Selection */}
               <section className="profile-section">
                 <div className="section-heading">
-                  <h3>Profile Keywords</h3>
+                  <h3>Profile Keywords & Categories</h3>
                   {vendorKeywords.length > 0 && (
                     <span style={{ fontSize: "11px", color: "var(--forest)", fontWeight: "600" }}>
                       {vendorKeywords.length} selected
@@ -1125,8 +1106,24 @@ export default function ProfilePage() {
                   )}
                 </div>
                 <p style={{ margin: "0 0 12px", color: "var(--muted)", fontSize: "12px", lineHeight: 1.4 }}>
-                  Select keywords that describe your business (e.g. crochet, mexican, coffee). Nearby customers who like vendors with these keywords will see your business in their recommendations.
+                  Select keywords that describe your business (e.g. crochet, mexican, coffee). Recommendation rankings focus on keyword categories to connect you with interested customers nearby.
                 </p>
+
+                {/* Active categories derived from keywords */}
+                {activeBusinessCategories.length > 0 && (
+                  <div style={{ marginBottom: "14px", padding: "10px 12px", borderRadius: "12px", background: "#f2f6ee" }}>
+                    <span style={{ display: "block", marginBottom: "6px", fontSize: "10px", fontWeight: 700, color: "var(--forest)", textTransform: "uppercase" }}>
+                      Assigned Keyword Categories
+                    </span>
+                    <div className="keyword-chip-list" style={{ marginTop: 0 }}>
+                      {activeBusinessCategories.map((cat) => (
+                        <span key={cat.id} className="keyword-chip keyword-match">
+                          ★ {cat.label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Current keywords as chips */}
                 {vendorKeywords.length > 0 ? (

@@ -1,7 +1,9 @@
 export {
+  KEYWORD_CATEGORIES,
+  getVendorCategories,
+  getCustomerLikedCategories,
   calculateRecommendations,
   getVendorKeywords,
-  getCustomerLikedKeywords,
   CATEGORY_KEYWORDS,
   SPECIALTY_RULES,
   BROAD_KEYWORDS,

@@ -5,7 +5,7 @@ import SearchBar from "../components/SearchBar"
 import { collectionFrom, valueFrom, vendorFrom } from "../lib/api"
 import { useApiResource } from "../hooks/useApiResource"
 import { useFavorites } from "../hooks/useFavorites"
-import { calculateRecommendations, getCustomerLikedKeywords } from "../lib/recommendations"
+import { calculateRecommendations, getCustomerLikedCategories } from "../lib/recommendations"
 import { matchesVendorSearch } from "../lib/search"
 
 export default function RecommendedPage() {
@@ -52,19 +52,18 @@ export default function RecommendedPage() {
 
   const { data, loading, error } = useApiResource(endpoint, [endpoint])
 
-  // Extract customer's liked keywords from their favorites for display & transparency
-  const customerLikedKeywords = useMemo(() => {
-    const weights = getCustomerLikedKeywords(favorites)
-    return Array.from(weights.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([kw]) => kw)
+  // Extract customer's liked keyword categories from their favorites
+  const customerLikedCategories = useMemo(() => {
+    const categoryMap = getCustomerLikedCategories(favorites)
+    return Array.from(categoryMap.values())
+      .sort((a, b) => b.weight - a.weight)
   }, [favorites])
 
-  // Compute up to 6 recommended vendors weighted by proximity in miles and relevant keywords
+  // Compute up to 6 recommended vendors weighted by proximity in miles and keyword categories
   const cards = useMemo(() => {
     const rawList = collectionFrom(data, ["recommendations", "vendors"]).map(vendorFrom)
 
-    // Run the recommendation algorithm weighted by proximity and relevant keywords
+    // Run the recommendation algorithm focusing on keyword categories and proximity
     const recommended = calculateRecommendations({
       vendors: rawList,
       userCoords,
@@ -97,18 +96,18 @@ export default function RecommendedPage() {
           <Icon name="heart" size={20} fill="var(--forest)" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h3 style={{ fontSize: "14px", margin: "0 0 2px" }}>Personalized for you</h3>
-          {customerLikedKeywords.length > 0 ? (
+          <h3 style={{ fontSize: "14px", margin: "0 0 2px" }}>Category-Ranked For You</h3>
+          {customerLikedCategories.length > 0 ? (
             <p style={{ margin: 0, fontSize: "11px", color: "var(--muted)", lineHeight: 1.35 }}>
-              Weighted by proximity{currentCity ? ` to ${currentCity}` : ""} and your liked keywords:{" "}
+              Ranked by proximity{currentCity ? ` to ${currentCity}` : ""} and your liked categories:{" "}
               <strong style={{ color: "var(--forest)" }}>
-                {customerLikedKeywords.slice(0, 4).join(", ")}
-                {customerLikedKeywords.length > 4 ? "…" : ""}
+                {customerLikedCategories.slice(0, 3).map((c) => c.label).join(", ")}
+                {customerLikedCategories.length > 3 ? "…" : ""}
               </strong>
             </p>
           ) : (
             <p style={{ margin: 0, fontSize: "11px", color: "var(--muted)", lineHeight: 1.35 }}>
-              Tap the heart on vendors you love to personalize recommendations by your favorite keywords!
+              Tap the heart on vendors you like to get recommendations ranked by your favorite keyword categories!
             </p>
           )}
         </div>
@@ -132,8 +131,9 @@ export default function RecommendedPage() {
         {cards.map((card, index) => {
           const isFav = isFavorite(card.id)
           const note = valueFrom(card, ["note", "reason", "description"])
+          const categories = Array.isArray(card.categories) ? card.categories : []
+          const matchingCategories = Array.isArray(card.matchingCategories) ? card.matchingCategories : []
           const keywords = Array.isArray(card.keywords) ? card.keywords : []
-          const matchingKeywords = Array.isArray(card.matchingKeywords) ? card.matchingKeywords : []
 
           return (
             <article
@@ -191,20 +191,28 @@ export default function RecommendedPage() {
                   </button>
                 </div>
 
-                {keywords.length > 0 && (
+                {/* Keyword Categories Badges */}
+                {categories.length > 0 && (
                   <div className="keyword-chip-list">
-                    {keywords.slice(0, 4).map((kw) => {
-                      const isMatch = matchingKeywords.includes(kw)
+                    {categories.slice(0, 3).map((cat) => {
+                      const isMatch = matchingCategories.includes(cat)
                       return (
                         <span
-                          key={kw}
+                          key={cat}
                           className={`keyword-chip ${isMatch ? "keyword-match" : ""}`}
-                          title={isMatch ? `Matches your liked keyword "${kw}"` : kw}
+                          title={isMatch ? `Matches your liked category: "${cat}"` : cat}
                         >
-                          {isMatch && "✓ "}{kw}
+                          {isMatch && "★ "}{cat}
                         </span>
                       )
                     })}
+                  </div>
+                )}
+
+                {/* Sub-keywords preview */}
+                {keywords.length > 0 && (
+                  <div style={{ fontSize: "10px", color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    Tags: {keywords.slice(0, 5).join(", ")}
                   </div>
                 )}
               </div>
