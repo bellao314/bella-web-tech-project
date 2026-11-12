@@ -1,0 +1,45 @@
+name: CI
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    lint-api:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v3
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v3
+              with:
+                node-version: "24"
+
+            - name: Install Backend Dependencies
+              working-directory: ./api
+              run: npm i
+
+            - name: Run Backend Lint
+              working-directory: ./api
+              run: npm run lint
+
+    lint-app:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v3
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v3
+              with:
+                node-version: "24"
+
+            - name: Install frontend Dependencies
+              working-directory: ./app
+              run: npm i
+
+            - name: Run frontend lint
+              working-directory: ./app
+              run: npm run lint
