@@ -1,0 +1,524 @@
+[
+  {
+    "id": "table.Favorite",
+    "label": "Create table \"Favorite\"",
+    "summary": "Creates table \"Favorite\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Favorite"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Favorite\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Favorite\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Favorite\"",
+        "sql": "CREATE TABLE \"public\".\"Favorite\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"userId\" int4 NOT NULL,\n  \"vendorId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Favorite\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Favorite\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.User.city",
+    "label": "Add column \"city\" to \"User\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "city",
+        "table": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"city\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "User",
+          "city"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"city\"",
+        "sql": "ALTER TABLE \"public\".\"User\" ADD COLUMN \"city\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"city\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "User",
+          "city"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.User.latitude",
+    "label": "Add column \"latitude\" to \"User\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "latitude",
+        "table": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"latitude\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "User",
+          "latitude"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"latitude\"",
+        "sql": "ALTER TABLE \"public\".\"User\" ADD COLUMN \"latitude\" numeric"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"latitude\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "User",
+          "latitude"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.User.longitude",
+    "label": "Add column \"longitude\" to \"User\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "longitude",
+        "table": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"longitude\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "User",
+          "longitude"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"longitude\"",
+        "sql": "ALTER TABLE \"public\".\"User\" ADD COLUMN \"longitude\" numeric"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"longitude\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "User",
+          "longitude"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Favorite.Favorite_userId_idx_a489d58a",
+    "label": "Create index \"Favorite_userId_idx_a489d58a\" on \"Favorite\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Favorite_userId_idx_a489d58a",
+        "table": "Favorite"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Favorite_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Favorite_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Favorite_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"Favorite_userId_idx_a489d58a\" ON \"public\".\"Favorite\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Favorite_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Favorite_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Favorite.Favorite_vendorId_idx_95bbe6fd",
+    "label": "Create index \"Favorite_vendorId_idx_95bbe6fd\" on \"Favorite\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Favorite_vendorId_idx_95bbe6fd",
+        "table": "Favorite"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Favorite_vendorId_idx_95bbe6fd\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Favorite_vendorId_idx_95bbe6fd\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Favorite_vendorId_idx_95bbe6fd\"",
+        "sql": "CREATE INDEX \"Favorite_vendorId_idx_95bbe6fd\" ON \"public\".\"Favorite\" (\"vendorId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Favorite_vendorId_idx_95bbe6fd\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Favorite_vendorId_idx_95bbe6fd\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Favorite.Favorite_userId_fkey",
+    "label": "Add foreign key \"Favorite_userId_fkey\" on \"Favorite\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Favorite_userId_fkey",
+        "table": "Favorite"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Favorite_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Favorite_userId_fkey",
+          "public",
+          "\"public\".\"Favorite\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Favorite_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Favorite\"\nADD CONSTRAINT \"Favorite_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"User\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Favorite_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Favorite_userId_fkey",
+          "public",
+          "\"public\".\"Favorite\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Favorite.Favorite_vendorId_fkey",
+    "label": "Add foreign key \"Favorite_vendorId_fkey\" on \"Favorite\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Favorite_vendorId_fkey",
+        "table": "Favorite"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Favorite_vendorId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Favorite_vendorId_fkey",
+          "public",
+          "\"public\".\"Favorite\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Favorite_vendorId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Favorite\"\nADD CONSTRAINT \"Favorite_vendorId_fkey\"\nFOREIGN KEY (\"vendorId\")\nREFERENCES \"public\".\"Vendor\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Favorite_vendorId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Favorite_vendorId_fkey",
+          "public",
+          "\"public\".\"Favorite\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.Favorite",
+    "label": "Enable row-level security on \"Favorite\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "Favorite"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"Favorite\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "Favorite"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"Favorite\"",
+        "sql": "ALTER TABLE \"public\".\"Favorite\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"Favorite\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "Favorite"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.Location",
+    "label": "Enable row-level security on \"Location\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "Location"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"Location\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "Location"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"Location\"",
+        "sql": "ALTER TABLE \"public\".\"Location\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"Location\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "Location"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.User",
+    "label": "Enable row-level security on \"User\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"User\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "User"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"User\"",
+        "sql": "ALTER TABLE \"public\".\"User\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"User\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "User"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.Vendor",
+    "label": "Enable row-level security on \"Vendor\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "Vendor"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"Vendor\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "Vendor"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"Vendor\"",
+        "sql": "ALTER TABLE \"public\".\"Vendor\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"Vendor\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "Vendor"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.logs",
+    "label": "Enable row-level security on \"logs\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "logs"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"logs\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "logs"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"logs\"",
+        "sql": "ALTER TABLE \"public\".\"logs\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"logs\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "logs"
+        ]
+      }
+    ]
+  }
+]

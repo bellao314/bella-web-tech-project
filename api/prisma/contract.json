@@ -547,6 +547,33 @@
     "namespaces": {
       "public": {
         "entries": {
+          "rls": {
+            "Favorite": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "Favorite"
+            },
+            "Location": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "Location"
+            },
+            "User": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "User"
+            },
+            "Vendor": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "Vendor"
+            },
+            "logs": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "logs"
+            }
+          },
           "table": {
             "Favorite": {
               "columns": {
@@ -942,7 +969,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "5b4c7875fa794a91fba5a4c504c8bd36e1e9a6694c59c16ddc62181ab8adf2e6"
+    "storageHash": "21a973c31f25511ae46baf7cb9ff240e5f5670b824be139e091e84ab3b30b712"
   },
   "execution": {
     "executionHash": "76ee8948067fff39e1b787eafdf2c9319ebe5e0f5029f71536b4f58b92d7790e",
