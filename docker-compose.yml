@@ -34,7 +34,6 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgrespassword}@db:5432/${POSTGRES_DB:-mobile_vendor}
       JWT_SECRET: ${JWT_SECRET:-mobile_vendor_super_secret_jwt_key_2026}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
-      POSTMARK_API_TOKEN: ${POSTMARK_API_TOKEN:-}
       BASE_URL: ${BASE_URL:-http://localhost}
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
       SEED_DATABASE: ${SEED_DATABASE:-false}
