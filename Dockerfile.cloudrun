@@ -61,5 +61,9 @@ ENV PORT=8080
 ENV RUN_MIGRATIONS=false
 EXPOSE 8080
 
+# Health check compatible with dynamic PORT
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD node -e 'fetch("http://localhost:" + (process.env.PORT || 8080) + "/health").then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))'
+
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node", "api/index.js"]

@@ -27,6 +27,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: backend
     restart: unless-stopped
     command: sh -c "npx prisma db migrate --yes && npm --prefix api run dev"
     volumes:

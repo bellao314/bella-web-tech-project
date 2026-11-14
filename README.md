@@ -50,3 +50,19 @@ docker compose -f docker-compose.dev.yml up
 - **Vite Dev Server:** [http://localhost:5173](http://localhost:5173)
 - **API Dev Server (Nodemon):** [http://localhost:3000](http://localhost:3000)
 
+### 5. Google Cloud Run Deployment
+The root `Dockerfile` is configured as a multi-stage unified production image that builds the React frontend and serves both the static web application and the Express API under a single Cloud Run service:
+
+```bash
+gcloud run deploy mobile-vendor-app \
+  --source . \
+  --region <your-region> \
+  --allow-unauthenticated \
+  --set-env-vars DATABASE_URL="<db-connection-string>",JWT_SECRET="<jwt-secret>" \
+  --set-build-env-vars VITE_GOOGLE_API_KEY="<maps-api-key>"
+```
+
+- When deployed, the root URL (`GET /`) and client-side routes serve the React Single Page Application.
+- API endpoints are accessed at `/api/*`.
+- Health check is available at `/health`.
+

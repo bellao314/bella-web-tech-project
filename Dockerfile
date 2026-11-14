@@ -1,8 +1,33 @@
 # ==============================================================================
-# Production Dockerfile for Mobile Vendor API & Database Migrations
-# Compatible with Google Cloud Run & Docker Compose
+# Production Dockerfile for Mobile Vendor App (Backend API + Frontend SPA)
+# Unified single-container deployment compatible with Google Cloud Run & Docker Compose
 # ==============================================================================
-FROM node:24-bookworm-slim AS production
+
+# ------------------------------------------------------------------------------
+# Stage 1: Build Frontend Assets
+# ------------------------------------------------------------------------------
+FROM node:24-bookworm-slim AS frontend-builder
+WORKDIR /build/app
+
+# Install frontend dependencies
+COPY app/package.json app/package-lock.json ./
+RUN npm ci
+
+# Copy frontend source
+COPY app ./
+
+# Build arguments for Vite static bundling
+ARG VITE_GOOGLE_API_KEY
+ARG VITE_API_URL=/api
+ENV VITE_GOOGLE_API_KEY=$VITE_GOOGLE_API_KEY
+ENV VITE_API_URL=$VITE_API_URL
+
+RUN npm run build
+
+# ------------------------------------------------------------------------------
+# Stage 2: Backend Base (API, Prisma & Migrations)
+# ------------------------------------------------------------------------------
+FROM node:24-bookworm-slim AS backend
 
 # Install necessary system libraries for native modules and SSL
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -41,3 +66,11 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node", "api/index.js"]
+
+# ------------------------------------------------------------------------------
+# Stage 3: Unified Production Container (Default target for Cloud Run)
+# ------------------------------------------------------------------------------
+FROM backend AS production
+
+# Copy built frontend assets from Stage 1 into /app/app/dist
+COPY --from=frontend-builder /build/app/dist ./app/dist

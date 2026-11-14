@@ -35,11 +35,22 @@ app.use("/api/maps", mapsRouter);
 const clientDistPath = path.resolve(__dirname, "../app/dist");
 if (fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));
-  app.get("*", (req, res, next) => {
+  app.get("{*splat}", (req, res, next) => {
     if (req.path.startsWith("/api") || req.path === "/health") {
       return next();
     }
     res.sendFile(path.join(clientDistPath, "index.html"));
+  });
+} else {
+  app.get("/", (_req, res) => {
+    res.json({
+      name: "Mobile Vendor API",
+      status: "running",
+      endpoints: {
+        health: "/health",
+        api: "/api",
+      },
+    });
   });
 }
 
