@@ -33,8 +33,13 @@ router.post("/", async (req, res, next) => {
 
     // const client = new postmark.ServerClient(process.env.POSTMARK_API_KEY);
 
-    const baseUrl = process.env.BASE_URL || "http://localhost:5173";
-    const resetLink = `${baseUrl}/reset?reset_tok=${resetToken}`;
+    const baseUrl =
+      process.env.APP_URL ||
+      process.env.BASE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:5173");
+    const resetUrl = new URL("reset", baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`);
+    resetUrl.searchParams.set("reset_tok", resetToken);
+    const resetLink = resetUrl.toString();
 
     await db.orm.public.logs.create({
       type: "USER_PASSWORD_CHANGE",
