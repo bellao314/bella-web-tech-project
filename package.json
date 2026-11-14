@@ -23,6 +23,7 @@
     "contract:emit": "prisma contract emit",
     "seed": "tsx api/prisma/seed.ts",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build" 
+    "deploy": "gh-pages -d build",
+    "build": "react-scripts build"
   }
 }
