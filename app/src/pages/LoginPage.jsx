@@ -106,7 +106,7 @@ export default function LoginPage({ onLoginSuccess }) {
   }
 
   return (
-    <main className="login-screen d-flex flex-column align-items-center">
+    <main className="login-screen scroll-page d-flex flex-column align-items-center">
       <div className="d-flex flex-column align-items-start col-12 col-lg-6">
         <div className="brand-mark"><Icon name="pin" size={27} /></div>
         <div className="mt-5">
