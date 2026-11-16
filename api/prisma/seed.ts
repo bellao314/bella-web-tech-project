@@ -84,7 +84,7 @@ async function seed() {
       });
     }
 
-    console.log(`Seeded user ${user.email} and vendor ${vendor.name}.`);
+    console.log(`Seeded user ${user?.email} and vendor ${vendor.name}.`);
   }
 }
 
