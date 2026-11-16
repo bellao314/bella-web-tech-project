@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { getApi } from "../lib/api"
 
-export function useApiResource(path, initialValue) {
+export function useApiResource(path, initialValue = null) {
   const [data, setData] = useState(initialValue)
   const [loading, setLoading] = useState(Boolean(path))
   const [error, setError] = useState(null)

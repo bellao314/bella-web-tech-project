@@ -296,7 +296,10 @@ export function calculateRecommendations({
   preferredKeywords = [],
   limit = 6,
 }) {
-  if (!Array.isArray(vendors) || vendors.length === 0) {
+  const validVendors = (Array.isArray(vendors) ? vendors : []).filter(
+    (v) => v && typeof v === "object" && v.name && String(v.name).trim() && v.name !== "Unnamed vendor"
+  );
+  if (validVendors.length === 0) {
     return [];
   }
 
@@ -305,9 +308,9 @@ export function calculateRecommendations({
 
   // Filter out vendors the customer has already liked/saved so they discover new vendors.
   // If filtering leaves too few candidates, fall back to including all vendors.
-  let candidatePool = vendors.filter((v) => !favoriteIds.has(String(v.id)));
+  let candidatePool = validVendors.filter((v) => !favoriteIds.has(String(v.id)));
   if (candidatePool.length < limit) {
-    candidatePool = [...vendors];
+    candidatePool = [...validVendors];
   }
 
   const scoredList = candidatePool.map((vendor) => {

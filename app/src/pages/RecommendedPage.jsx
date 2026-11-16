@@ -52,7 +52,7 @@ export default function RecommendedPage() {
     return `/recommendations${query ? `?${query}` : ""}`
   }, [userCoords, favorites, isVendor])
 
-  const { data, loading, error } = useApiResource(endpoint, [endpoint])
+  const { data, loading, error } = useApiResource(endpoint, null)
 
   // Extract customer's liked keyword categories from their favorites
   const customerLikedCategories = useMemo(() => {
@@ -63,7 +63,11 @@ export default function RecommendedPage() {
 
   // Compute up to 6 recommended vendors weighted by proximity in miles and keyword categories
   const cards = useMemo(() => {
-    let rawList = collectionFrom(data, ["recommendations", "vendors"]).map(vendorFrom)
+    if (loading) return []
+    let rawList = collectionFrom(data, ["recommendations", "vendors"])
+      .filter((item) => item && typeof item === "object")
+      .map(vendorFrom)
+      .filter((v) => v && v.name && v.name.trim() && v.name !== "Unnamed vendor")
 
     // Merge any locally stored business branding if present
     const businessData = getBusinessData()
@@ -92,7 +96,7 @@ export default function RecommendedPage() {
     })
 
     return recommended.filter((v) => matchesVendorSearch(v)).slice(0, 6)
-  }, [data, userCoords, favorites])
+  }, [data, userCoords, favorites, loading])
 
   if (isVendor) {
     return <Navigate to="/vendor/my-business" replace />
@@ -140,7 +144,7 @@ export default function RecommendedPage() {
           <p className="empty-state">No recommendations are available yet.</p>
         )}
 
-        {cards.map((card, index) => {
+        {!loading && !error && cards.map((card, index) => {
           const isFav = isFavorite(card.id)
           const note = valueFrom(card, ["note", "reason", "description"])
           const categories = Array.isArray(card.categories) ? card.categories : []
