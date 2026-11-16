@@ -1,6 +1,6 @@
 # ==============================================================================
 # Multi-stage Dockerfile for Mobile Vendor Frontend (Vite + React + Nginx)
-# Compatible with Google Cloud Run & Docker Compose
+# Compatible with Docker Compose
 # ==============================================================================
 
 # Stage 1: Build production bundle
@@ -35,7 +35,7 @@ COPY --from=builder /app/dist .
 # Copy Nginx template for dynamic runtime configuration ($PORT and $API_BACKEND_URL)
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
-# Cloud Run defaults to 8080.
+# Default port for container
 # NGINX_ENVSUBST_FILTER ensures envsubst ONLY replaces ${PORT} and ${API_BACKEND_URL},
 # preventing corruption of internal Nginx variables like $uri and $http_upgrade.
 ENV PORT=8080

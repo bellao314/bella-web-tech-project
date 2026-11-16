@@ -31,7 +31,7 @@ app.use("/api/vendors", vendors);
 app.use("/api/recommendations", recommendations);
 app.use("/api/maps", mapsRouter);
 
-// Serve frontend static build if present (e.g. unified single-container deployment)
+// Serve frontend static build if present
 const clientDistPath = path.resolve(__dirname, "../app/dist");
 if (fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));

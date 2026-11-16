@@ -1,6 +1,6 @@
 # ==============================================================================
 # Standalone Dockerfile for Mobile Vendor Backend API
-# Compatible with Google Cloud Run & Docker Compose
+# Compatible with Docker Compose
 # ==============================================================================
 FROM node:24-bookworm-slim
 
