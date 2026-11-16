@@ -39,7 +39,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
 
 .content { position: absolute; inset: 0; overflow: hidden; }
 
-.page { padding-top: 33px; background: var(--paper); }
+.page { height: 100%; padding-top: 33px; background: var(--paper); }
 .scroll-page { overflow-y: auto; padding-bottom: 100px; scrollbar-width: none; }
 .scroll-page::-webkit-scrollbar, .vendor-list::-webkit-scrollbar { display: none; }
 .page-header { min-height: 88px; padding: 21px 22px 14px; display: flex; align-items: center; justify-content: space-between; }
