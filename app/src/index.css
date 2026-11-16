@@ -80,7 +80,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
   top: 0;
   left: 0;
   right: 0;
-  bottom: 350px;
+  bottom: 250px;
   height: auto;
   z-index: 1;
 }
@@ -182,7 +182,30 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
 .pin-c { top: 252px; right: 52px; background: #7b877e; }
 .pin-d { top: 177px; right: 78px; background: #7b877e; }
 .location-button { position: absolute; z-index: 5; right: 18px; top: 331px; width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: white; box-shadow: 0 4px 15px rgba(35,46,38,.14); cursor: pointer; }
-.vendor-sheet { position: absolute; z-index: 6; height: 300px; left: 0; right: 0; bottom: 66px; padding: 8px 18px 0; border-radius: 26px 26px 0 0; background: var(--paper); box-shadow: 0 -8px 30px rgba(42,52,45,.12); }
+.vendor-sheet {
+  position: absolute;
+  z-index: 6;
+  height: 200px;
+  left: 0;
+  right: 0;
+  bottom: 66px;
+  padding: 6px 18px 0;
+  border-radius: 24px 24px 0 0;
+  background: var(--paper);
+  box-shadow: 0 -8px 30px rgba(42, 52, 45, .12);
+  display: flex;
+  flex-direction: column;
+}
+.vendor-sheet::before {
+  content: "";
+  display: block;
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: #cbd3cb;
+  margin: 2px auto 6px;
+  flex-shrink: 0;
+}
 
 @media (min-width: 768px) {
   .map-page {
@@ -280,20 +303,38 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
     box-shadow: none;
     padding: 14px 18px 0;
   }
+  .vendor-sheet::before {
+    display: none;
+  }
+  .sheet-title {
+    margin-bottom: 12px;
+    padding-top: 10px;
+  }
+  .sheet-title h3 {
+    font-size: 18px;
+  }
+  .vendor-card {
+    padding: 10px 0;
+  }
+  .vendor-thumb, .mini-thumb {
+    width: 52px;
+    height: 52px;
+    font-size: 18px;
+  }
 }
-.sheet-title { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; padding-top: 10px;}
-.sheet-title h3, .recommend-intro h3, .profile-section h3, .pin-sheet h3 { margin: 0; font: 700 18px/1.2 'Inter'; letter-spacing: -.02em; }
-.sheet-title p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+.sheet-title { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; padding-top: 2px; flex-shrink: 0; }
+.sheet-title h3, .recommend-intro h3, .profile-section h3, .pin-sheet h3 { margin: 0; font: 700 16px/1.2 'Inter'; letter-spacing: -.02em; }
+.sheet-title p { margin: 2px 0 0; color: var(--muted); font-size: 11px; }
 .filter-button { padding: 7px 10px; border: 1px solid var(--line); border-radius: 9px; background: white; font-size: 11px; font-weight: 700; }
 .filter-button span { padding: 1px 5px; margin-left: 3px; border-radius: 8px; background: var(--lime); }
-.vendor-list { height: calc(100% - 58px); overflow-y: auto; scrollbar-width: none; padding-bottom: 12px; scroll-behavior: smooth; }
-.vendor-card { width: 100%; padding: 10px 0; display: flex; gap: 11px; align-items: center; border: 0; border-bottom: 1px solid var(--line); background: transparent; text-align: left; cursor: pointer; transition: all 0.2s ease; }
+.vendor-list { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding-bottom: 12px; scroll-behavior: smooth; }
+.vendor-card { width: 100%; padding: 8px 0; display: flex; gap: 11px; align-items: center; border: 0; border-bottom: 1px solid var(--line); background: transparent; text-align: left; cursor: pointer; transition: all 0.2s ease; }
 .vendor-card.selected { padding-left: 10px; padding-right: 10px; border-radius: 14px; background: var(--sage); border: 1.5px solid var(--forest); }
 .vendor-fav-btn { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: white; color: #847f8b; cursor: pointer; transition: all 0.2s ease; padding: 0; }
 .vendor-fav-btn:hover { background: #fff1f2; color: #e11d48; border-color: #fecdd3; transform: scale(1.06); }
 .vendor-fav-btn.is-favorite { background: #ffe4e6; color: #e11d48; border-color: #fda4af; }
 .vendor-card .chevron-icon { flex: 0 0 auto; color: #847f8b; }
-.vendor-thumb, .mini-thumb { width: 52px; height: 52px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 12px; background: #dfe2da; color: #798079; font: 700 18px 'Inter'; }
+.vendor-thumb, .mini-thumb { width: 48px; height: 48px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 12px; background: #dfe2da; color: #798079; font: 700 16px 'Inter'; }
 .vendor-info { flex: 1; min-width: 0; }
 .vendor-info > div { display: flex; justify-content: space-between; }
 .vendor-info h4, .mini-vendor h4 { margin: 0; font: 700 13px 'Inter'; }
