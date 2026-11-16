@@ -114,8 +114,8 @@ export default function LoginPage({ onLoginSuccess }) {
             {isForgotPassword
               ? "RESET PASSWORD"
               : isSignUp
-                ? (accountType === "business" ? "GROW YOUR BUSINESS" : "START EXPLORING")
-                : "FIND YOUR FAVES"}
+                ? (accountType === "business" ? "GROW YOUR BUSINESS WITH FINNLEY" : "START EXPLORING ON FINNLEY")
+                : "FINNLEY: A Mobile Vendor Finder"}
           </p>
           <p className="fs-6">
             {isForgotPassword
