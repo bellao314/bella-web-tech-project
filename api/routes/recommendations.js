@@ -2,7 +2,6 @@ import { Router } from "express";
 import { db } from "../prisma/db.ts";
 import { getUserFromRequest, getUserFavorites } from "./user.js";
 import { formatVendor } from "./vendors.js";
-import { vendors as defaultVendors } from "../prisma/export-vendors.js";
 import { calculateRecommendations, getVendorKeywords } from "../services/recommendations.service.js";
 
 const router = Router();
@@ -11,16 +10,9 @@ router.get("/", async (req, res, next) => {
   try {
     let rawVendors = [];
     try {
-      rawVendors = await db.orm.public.Vendor.include("location").all();
+      rawVendors = (await db.orm.public.Vendor.include("location").all()) || [];
     } catch {
       rawVendors = [];
-    }
-
-    if (!rawVendors || rawVendors.length === 0) {
-      rawVendors = defaultVendors.map((v, idx) => ({
-        id: idx + 1,
-        ...v,
-      }));
     }
 
     // Attempt to identify user from Authorization header

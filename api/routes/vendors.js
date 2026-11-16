@@ -2,7 +2,6 @@ import { Router } from "express";
 import { db } from "../prisma/db.ts";
 import { calculateDistanceInMiles, formatDistance } from "../services/google-maps.service.js";
 import { getVendorKeywords } from "../services/recommendations.service.js";
-import { vendors as defaultVendors } from "../prisma/export-vendors.js";
 
 const router = Router();
 
@@ -97,13 +96,9 @@ router.get("/", async (req, res, next) => {
   try {
     let rawVendors = [];
     try {
-      rawVendors = await db.orm.public.Vendor.include("location").all();
+      rawVendors = (await db.orm.public.Vendor.include("location").all()) || [];
     } catch {
       rawVendors = [];
-    }
-
-    if (!rawVendors || rawVendors.length === 0) {
-      rawVendors = defaultVendors.map((v, idx) => ({ id: idx + 1, ...v }));
     }
 
     const lat = req.query.lat != null && req.query.lat !== "" ? Number(req.query.lat) : null;
@@ -137,13 +132,6 @@ router.get("/:id", async (req, res, next) => {
       rawVendor = await db.orm.public.Vendor.where({ id }).include("location").first();
     } catch {
       rawVendor = null;
-    }
-
-    if (!rawVendor) {
-      const match = defaultVendors[id - 1];
-      if (match) {
-        rawVendor = { id, ...match };
-      }
     }
 
     if (!rawVendor) {
