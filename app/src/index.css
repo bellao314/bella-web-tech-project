@@ -342,7 +342,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
 .vendor-info p { margin: 3px 0; color: var(--muted); font-size: 11px; }
 .vendor-info small { display: flex; align-items: center; color: #7c847d; font-size: 9px; }
 
-.bottom-nav { position: absolute; z-index: 20; bottom: 0; left: 0; right: 0; height: 67px; padding: 7px 44px 14px; display: flex; justify-content: space-around; background: rgba(250,250,247,.97); border-top: 1px solid var(--line); }
+.bottom-nav { position: fixed; z-index: 20; bottom: 0; left: 0; right: 0; height: 67px; padding: 7px 44px 14px; display: flex; justify-content: space-around; background: rgba(250,250,247,.97); border-top: 1px solid var(--line); }
 .nav-item { min-width: 54px; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; border: 0; background: none; color: #8d948e; font-size: 9px; cursor: pointer; }
 .nav-item.active { color: var(--forest); font-weight: 800; }
 .nav-item.active svg { stroke-width: 2.4; }
