@@ -111,7 +111,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
   left: 0;
   right: 0;
   background: var(--paper);
-  padding: 33px 18px 12px;
+  padding: 20px 18px 12px;
   box-shadow: 0 4px 16px rgba(42, 52, 45, 0.08);
   border-radius: 0 0 18px 18px;
 }
@@ -183,9 +183,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
 .pin-d { top: 177px; right: 78px; background: #7b877e; }
 .location-button { position: absolute; z-index: 5; right: 18px; top: 331px; width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: white; box-shadow: 0 4px 15px rgba(35,46,38,.14); cursor: pointer; }
 .vendor-sheet {
-  position: absolute;
+  position: fixed;
   z-index: 6;
-  height: 200px;
+  height: 210px;
   left: 0;
   right: 0;
   bottom: 66px;
