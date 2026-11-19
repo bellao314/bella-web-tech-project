@@ -236,7 +236,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(33, 79, 61, 
   }
 
   .map-container {
-    position: fixed;
+    position: relative;
     top: auto;
     left: auto;
     right: auto;
