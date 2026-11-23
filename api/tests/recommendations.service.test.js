@@ -1,10 +1,42 @@
-import { test } from "vitest";
+import { expect, test } from "vitest";
 import assert from "node:assert/strict";
 import {
   calculateRecommendations,
   getVendorCategories,
   getCustomerLikedCategories,
+  getVendorKeywords,
 } from "../services/recommendations.service.js";
+
+test("getVendorKeywords normalizes strings, tags, types, and specialty names", () => {
+  expect(getVendorKeywords(null)).toEqual([]);
+  const keywords = getVendorKeywords({
+    name: "Willow Botanical Boutique",
+    type: "mobile boutique",
+    keywords: " Coffee, espresso , ",
+    tags: ["Handmade", "  Local "],
+  });
+  expect(keywords).toEqual(expect.arrayContaining(["coffee", "espresso", "handmade", "local", "boutique", "clothing", "plants", "florals"]));
+});
+
+test("preferred categories increase customer interest weight and invalid vendors are ignored", () => {
+  const interests = getCustomerLikedCategories(
+    [{ name: "Coffee cart", keywords: ["coffee"] }],
+    ["coffee_cafe", "crochet", "unknown", ""]
+  );
+  expect(interests.get("coffee_cafe").weight).toBe(3);
+  expect(interests.get("fiber_crochet").weight).toBe(2);
+  expect(calculateRecommendations({ vendors: [null, {}, { name: "Unnamed vendor" }] })).toEqual([]);
+});
+
+test("recommendations fall back to including favorites when fewer than the requested limit remain", () => {
+  const vendors = [
+    { id: 1, name: "Saved Coffee", keywords: ["coffee"], distanceInMiles: 2, distance: "2.0 mi" },
+    { id: 2, name: "New Coffee", keywords: ["coffee"], distanceInMiles: 1, distance: "1.0 mi" },
+  ];
+  const results = calculateRecommendations({ vendors, favorites: [vendors[0]], preferredKeywords: ["coffee"], limit: 6 });
+  expect(results).toHaveLength(2);
+  expect(results[0]).toMatchObject({ id: 2, distance: "1.0 mi", categoryMatchCount: 1 });
+});
 
 test("getVendorCategories resolves correct keyword categories", () => {
   const crochetVendor = {
